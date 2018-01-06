@@ -1,14 +1,20 @@
 #include <Arduino.h>
+#include <SoftwareSerial.h>
 
-const int LED_PIN = 13;
+const int PIN_TX = 13;
+const int PIN_RX = 12;
+
+SoftwareSerial mySerial(PIN_RX, PIN_TX);
 
 void setup() {
-    pinMode(LED_PIN, OUTPUT);
+    mySerial.begin(9600);
+    mySerial.println("Hello, world!");
 }
 
 void loop() {
-    digitalWrite(LED_PIN, HIGH);
-    delay(100);
-    digitalWrite(LED_PIN, LOW);
-    delay(100);
+    int ch;
+
+    while ((ch = mySerial.read()) != -1) {
+        mySerial.write((char) ch);
+    }
 }
