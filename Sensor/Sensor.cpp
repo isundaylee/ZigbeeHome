@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 
-const int PIN_TX = 13;
-const int PIN_RX = 12;
+const int PIN_TX = 4;
+const int PIN_RX = 3;
 
 SoftwareSerial mySerial(PIN_RX, PIN_TX);
 
