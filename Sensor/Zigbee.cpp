@@ -2,10 +2,11 @@
 
 const int Zigbee::INPUT_FLUSH_PREDELAY = 50;
 const int Zigbee::WAKEUP_DELAY = 200;
+const int Zigbee::QUERY_DELAY = 200;
 
 Zigbee::Zigbee(int txPin, int rxPin) : serial_(rxPin, txPin) {}
 
-void Zigbee::query(char *query, uint8_t *out, size_t responseSize) {
+bool Zigbee::query(const char *query, uint8_t *out, size_t responseSize) {
   this->wakeUp();
   this->flushSerialInput();
 
@@ -14,17 +15,29 @@ void Zigbee::query(char *query, uint8_t *out, size_t responseSize) {
   serial_.write((uint8_t)0xFF);
 
   // We account for the 0xFB prefix here. We also consume it before returning.
-  this->waitForBytes(1 + responseSize);
-  serial_.read();
+  if (this->waitForBytes(1 + responseSize, QUERY_DELAY)) {
+    serial_.read();
 
-  for (size_t i = 0; i < responseSize; i++) {
-    out[i] = serial_.read();
+    for (size_t i = 0; i < responseSize; i++) {
+      out[i] = serial_.read();
+    }
+
+    return true;
+  } else {
+    return false;
   }
 }
 
-void Zigbee::waitForBytes(size_t count) {
-  while (serial_.available() < count)
+bool Zigbee::waitForBytes(size_t count, size_t maxWaitTime) {
+  for (size_t i = 0; i < maxWaitTime; i++) {
+    if ((size_t)serial_.available() >= count) {
+      return true;
+    }
+
     delay(1);
+  }
+
+  return false;
 }
 
 void Zigbee::flushSerialInput() {
@@ -41,16 +54,11 @@ void Zigbee::wakeUp() {
   serial_.write((uint8_t)0xFE);
   serial_.write((uint8_t)0xFF);
 
-  for (size_t t = 0; t < WAKEUP_DELAY; t++) {
-    delay(1);
-
-    if (serial_.available() == 2) {
-      this->flushSerialInput();
-      return;
-    }
+  if (this->waitForBytes(2, WAKEUP_DELAY)) {
+    this->flushSerialInput();
+  } else {
+    this->wakeUp();
   }
-
-  this->wakeUp();
 }
 
 void Zigbee::begin(int baud) { serial_.begin(baud); }
@@ -70,8 +78,8 @@ void Zigbee::broadcast(uint8_t *buf, size_t len) {
   }
 }
 
-void Zigbee::broadcast(char *buf) { this->broadcast(buf, strlen(buf)); }
-
-void Zigbee::getMacAddress(uint8_t *out) {
-  this->query("\x01\x06", out, 8);
+void Zigbee::broadcast(const char *buf) {
+  this->broadcast((uint8_t *)buf, strlen(buf));
 }
+
+void Zigbee::getMacAddress(uint8_t *out) { this->query("\x01\x06", out, 8); }

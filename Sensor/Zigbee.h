@@ -7,11 +7,12 @@ class Zigbee {
 private:
   static const int INPUT_FLUSH_PREDELAY;
   static const int WAKEUP_DELAY;
+  static const int QUERY_DELAY;
 
   SoftwareSerial serial_;
 
-  void query(char *query, uint8_t *out, size_t responseSize);
-  void waitForBytes(size_t count);
+  bool query(const char *query, uint8_t *out, size_t responseSize);
+  bool waitForBytes(size_t count, size_t maxWaitTime);
   void flushSerialInput();
   void wakeUp();
 
@@ -21,7 +22,7 @@ public:
   void begin(int baud);
 
   void broadcast(uint8_t *buf, size_t len);
-  void broadcast(char *buf);
+  void broadcast(const char *buf);
 
   void getMacAddress(uint8_t *out);
 };

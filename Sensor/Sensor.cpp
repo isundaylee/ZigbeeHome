@@ -13,10 +13,13 @@ Zigbee zigbee(PIN_ZIGBEE_TX, PIN_ZIGBEE_RX);
 void setup() { zigbee.begin(9600); }
 
 void loop() {
-  uint8_t addr[8];
+  // uint8_t addr[8];
+  //
+  // zigbee.getMacAddress(addr);
+  // zigbee.broadcast(addr, 8);
+  //
 
-  zigbee.getMacAddress(addr);
-  zigbee.broadcast(addr, 8);
+  zigbee.broadcast("\xFB");
 
   delay(1000);
 }
