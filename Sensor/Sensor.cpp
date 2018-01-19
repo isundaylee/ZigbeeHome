@@ -8,7 +8,7 @@ SoftwareSerial mySerial(PIN_RX, PIN_TX);
 
 void setup() {
     mySerial.begin(9600);
-    mySerial.println("Hello, world!");
+    mySerial.println("===========================");
 }
 
 void loop() {
