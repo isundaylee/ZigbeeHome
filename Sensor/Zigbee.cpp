@@ -61,10 +61,20 @@ void Zigbee::wakeUp() {
   }
 }
 
-void Zigbee::begin(int baud) { serial_.begin(baud); }
+void Zigbee::begin(int baud) {
+  serial_.begin(baud);
+  for (uint8_t i = 0; 1; i++) {
+    uint8_t buf[64];
+    for (int j=0; j<64; j++) {
+      buf[j] = i;
+    }
+    this->broadcast(buf, 64);
+    delay(1000);
+  }
+}
 
 void Zigbee::broadcast(uint8_t *buf, size_t len) {
-  this->wakeUp();
+  // this->wakeUp();
 
   size_t totalLen = 2 + len;
 
