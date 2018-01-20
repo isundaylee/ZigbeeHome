@@ -1,7 +1,8 @@
 #pragma once
 
 #include <Arduino.h>
-#include <SoftwareSerial.h>
+
+#include "TinySerial.h"
 
 class Zigbee {
 private:
@@ -9,7 +10,7 @@ private:
   static const int WAKEUP_DELAY;
   static const int QUERY_DELAY;
 
-  SoftwareSerial serial_;
+  TinySerial serial_;
 
   bool query(const char *query, uint8_t *out, size_t responseSize);
   bool waitForBytes(size_t count, size_t maxWaitTime);
