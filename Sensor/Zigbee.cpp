@@ -1,10 +1,14 @@
 #include "Zigbee.h"
 
+#include <util/delay.h>
+
+#include <string.h>
+
 const int Zigbee::INPUT_FLUSH_PREDELAY = 50;
 const int Zigbee::WAKEUP_DELAY = 200;
 const int Zigbee::QUERY_DELAY = 200;
 
-Zigbee::Zigbee(int txPin, int rxPin) : serial_(rxPin, txPin) {}
+Zigbee::Zigbee(int txPin, int rxPin) : serial_(txPin, rxPin) {}
 
 bool Zigbee::query(const char *query, uint8_t *out, size_t responseSize) {
   this->wakeUp();
@@ -34,14 +38,14 @@ bool Zigbee::waitForBytes(size_t count, size_t maxWaitTime) {
       return true;
     }
 
-    delay(1);
+    _delay_ms(1);
   }
 
   return false;
 }
 
 void Zigbee::flushSerialInput() {
-  delay(INPUT_FLUSH_PREDELAY);
+  _delay_ms(INPUT_FLUSH_PREDELAY);
 
   for (size_t i = serial_.available(); i > 0; i--) {
     serial_.read();
@@ -61,20 +65,21 @@ void Zigbee::wakeUp() {
   }
 }
 
-void Zigbee::begin(int baud) {
+void Zigbee::begin(long baud) {
   serial_.begin(baud);
-  for (uint8_t i = 0; 1; i++) {
-    uint8_t buf[64];
-    for (int j=0; j<64; j++) {
-      buf[j] = i;
-    }
-    this->broadcast(buf, 64);
-    delay(1000);
-  }
+
+  // for (uint8_t i = 0; 1; i++) {
+  //   uint8_t buf[64];
+  //   for (int j=0; j<64; j++) {
+  //     buf[j] = i;
+  //   }
+  //   this->broadcast(buf, 64);
+  //   _delay_ms(500);
+  // }
 }
 
 void Zigbee::broadcast(uint8_t *buf, size_t len) {
-  // this->wakeUp();
+  this->wakeUp();
 
   size_t totalLen = 2 + len;
 

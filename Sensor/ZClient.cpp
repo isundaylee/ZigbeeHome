@@ -1,8 +1,10 @@
 #include "ZClient.h"
 
+#include <string.h>
+
 ZClient::ZClient(int txPin, int rxPin) : bee_(txPin, rxPin) {}
 
-void ZClient::begin(int baud) {
+void ZClient::begin(long baud) {
   bee_.begin(baud);
 
   bee_.getMacAddress(macAddress_);

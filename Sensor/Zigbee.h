@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Arduino.h>
-
 #include "TinySerial.h"
 
 class Zigbee {
@@ -20,7 +18,7 @@ private:
 public:
   Zigbee(int txPin, int rxPin);
 
-  void begin(int baud);
+  void begin(long baud);
 
   void broadcast(uint8_t *buf, size_t len);
   void broadcast(const char *buf);

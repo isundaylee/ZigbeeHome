@@ -47,7 +47,7 @@ void TinySerial::begin(long baud) {
     receiveInitialDelay_ = 130;
     receiveLastDelay_ = 110;
   } else if (F_CPU == 8000000 && baud == 115200) {
-    delay_ = 15;
+    delay_ = 14;
     receiveInitialDelay_ = 11;
     receiveLastDelay_ = 7;
   } else {
