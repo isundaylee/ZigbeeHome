@@ -5,6 +5,7 @@
 class Zigbee {
 private:
   static const int INPUT_FLUSH_PREDELAY;
+  static const int WAKEUP_LENGTH;
   static const int WAKEUP_DELAY;
   static const int QUERY_DELAY;
 

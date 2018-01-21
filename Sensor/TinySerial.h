@@ -8,6 +8,16 @@ extern volatile size_t count;
 extern "C" void __vector_2(void)
     __attribute__((signal, used, externally_visible));
 
+extern "C" void __vector_PCINT0_FALLING(void)
+    __attribute__((signal, used, externally_visible));
+
+
+const long TINY_SERIAL_BAUD = 115200;
+const long TINY_SERIAL_TX_DELAY = 56;
+const long TINY_SERIAL_RX_DELAY_INITIAL = 30;
+const long TINY_SERIAL_RX_DELAY = 49;
+const long TINY_SERIAL_RX_DELAY_LAST = 30;
+
 class TinySerial {
 private:
   const static size_t BUFFER_SIZE = 64;
@@ -28,8 +38,9 @@ private:
 
   void writeRaw(uint8_t byte);
 
-  static size_t serialCount_;
-  static TinySerial *allSerials_[8];
+  static TinySerial *listeningSerial_;
+  static int listeningTxPinMask_;
+  static int listeningRxPinMask_;
 
 public:
   TinySerial(int txPin, int rxPin);
@@ -45,4 +56,5 @@ public:
   int read();
 
   friend void __vector_2();
+  friend void __vector_PCINT0_FALLING();
 };

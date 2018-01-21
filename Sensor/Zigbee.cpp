@@ -5,6 +5,7 @@
 #include <string.h>
 
 const int Zigbee::INPUT_FLUSH_PREDELAY = 50;
+const int Zigbee::WAKEUP_LENGTH = 10;
 const int Zigbee::WAKEUP_DELAY = 200;
 const int Zigbee::QUERY_DELAY = 200;
 
@@ -55,8 +56,9 @@ void Zigbee::flushSerialInput() {
 void Zigbee::wakeUp() {
   this->flushSerialInput();
 
-  serial_.write((uint8_t)0xFE);
-  serial_.write((uint8_t)0xFF);
+  for (size_t i = 0; i < WAKEUP_LENGTH; i++) {
+    serial_.write((uint8_t)0x00);
+  }
 
   if (this->waitForBytes(2, WAKEUP_DELAY)) {
     this->flushSerialInput();
@@ -67,15 +69,6 @@ void Zigbee::wakeUp() {
 
 void Zigbee::begin(long baud) {
   serial_.begin(baud);
-
-  // for (uint8_t i = 0; 1; i++) {
-  //   uint8_t buf[64];
-  //   for (int j=0; j<64; j++) {
-  //     buf[j] = i;
-  //   }
-  //   this->broadcast(buf, 64);
-  //   _delay_ms(500);
-  // }
 }
 
 void Zigbee::broadcast(uint8_t *buf, size_t len) {
