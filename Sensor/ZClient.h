@@ -23,7 +23,7 @@ private:
 public:
   ZClient(int txPin, int rxPin);
 
-  void begin(long baud);
+  void begin();
 
   void broadcast(const char *method, const char *key, const char *value);
 };

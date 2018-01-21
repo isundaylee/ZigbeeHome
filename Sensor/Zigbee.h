@@ -4,10 +4,10 @@
 
 class Zigbee {
 private:
-  static const int INPUT_FLUSH_PREDELAY;
-  static const int WAKEUP_LENGTH;
-  static const int WAKEUP_DELAY;
+  static const int WAKEUP_MESSAGE_LENGTH;
+  static const int WAKEUP_WAIT_TIME;
   static const int QUERY_DELAY;
+  static const int MESSAGE_GAP_DELAY;
 
   TinySerial serial_;
 
@@ -19,7 +19,7 @@ private:
 public:
   Zigbee(int txPin, int rxPin);
 
-  void begin(long baud);
+  void begin();
 
   void broadcast(uint8_t *buf, size_t len);
   void broadcast(const char *buf);

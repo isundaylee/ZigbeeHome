@@ -1,13 +1,15 @@
 #include "Zigbee.h"
 
+#include <avr/io.h>
+
 #include <util/delay.h>
 
 #include <string.h>
 
-const int Zigbee::INPUT_FLUSH_PREDELAY = 50;
-const int Zigbee::WAKEUP_LENGTH = 10;
-const int Zigbee::WAKEUP_DELAY = 200;
+const int Zigbee::WAKEUP_MESSAGE_LENGTH = 10;
+const int Zigbee::WAKEUP_WAIT_TIME = 20;
 const int Zigbee::QUERY_DELAY = 200;
+const int Zigbee::MESSAGE_GAP_DELAY = 10;
 
 Zigbee::Zigbee(int txPin, int rxPin) : serial_(txPin, rxPin) {}
 
@@ -45,31 +47,25 @@ bool Zigbee::waitForBytes(size_t count, size_t maxWaitTime) {
   return false;
 }
 
-void Zigbee::flushSerialInput() {
-  _delay_ms(INPUT_FLUSH_PREDELAY);
-
-  for (size_t i = serial_.available(); i > 0; i--) {
-    serial_.read();
-  }
-}
+void Zigbee::flushSerialInput() { serial_.flush(); }
 
 void Zigbee::wakeUp() {
   this->flushSerialInput();
 
-  for (size_t i = 0; i < WAKEUP_LENGTH; i++) {
+  for (size_t i = 0; i < WAKEUP_MESSAGE_LENGTH; i++) {
     serial_.write((uint8_t)0x00);
   }
 
-  if (this->waitForBytes(2, WAKEUP_DELAY)) {
+  if (this->waitForBytes(2, WAKEUP_WAIT_TIME)) {
+    _delay_ms(MESSAGE_GAP_DELAY);
+
     this->flushSerialInput();
   } else {
     this->wakeUp();
   }
 }
 
-void Zigbee::begin(long baud) {
-  serial_.begin(baud);
-}
+void Zigbee::begin() { serial_.begin(); }
 
 void Zigbee::broadcast(uint8_t *buf, size_t len) {
   this->wakeUp();

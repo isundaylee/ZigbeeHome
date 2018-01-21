@@ -28,7 +28,6 @@ private:
   int txPinMask_;
   int rxPinMask_;
 
-  long baud_;
   long delay_;
   long receiveInitialDelay_;
   long receiveLastDelay_;
@@ -45,7 +44,7 @@ private:
 public:
   TinySerial(int txPin, int rxPin);
 
-  void begin(long baud);
+  void begin();
 
   void write(uint8_t byte);
   void write(uint8_t *buf, size_t len);
@@ -54,6 +53,8 @@ public:
   size_t available();
 
   int read();
+
+  void flush();
 
   friend void __vector_2();
   friend void __vector_PCINT0_FALLING();

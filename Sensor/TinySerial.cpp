@@ -36,25 +36,7 @@ void TinySerial::writeRaw(uint8_t byte) {
   __builtin_avr_delay_cycles(TINY_SERIAL_TX_DELAY);
 }
 
-void TinySerial::begin(long baud) {
-  baud_ = baud;
-
-  // We have these hand-tuned settings hard-coded for common baud rates.
-  // For other cases, we use the formula in the last else clause.
-  if (F_CPU == 8000000 && baud == 9600) {
-    delay_ = 216;
-    receiveInitialDelay_ = 130;
-    receiveLastDelay_ = 110;
-  } else if (F_CPU == 8000000 && baud == 115200) {
-    delay_ = 20;
-    receiveInitialDelay_ = 11;
-    receiveLastDelay_ = 7;
-  } else {
-    delay_ = (F_CPU / baud - 4) / 4;
-    receiveInitialDelay_ = delay_ * 2 / 3;
-    receiveLastDelay_ = delay_ * 2 / 3;
-  }
-
+void TinySerial::begin() {
   TinySerial::listeningSerial_ = this;
   TinySerial::listeningTxPinMask_ = txPinMask_;
   TinySerial::listeningRxPinMask_ = rxPinMask_;
@@ -170,4 +152,8 @@ int TinySerial::read() {
   head_ = (head_ + 1) % BUFFER_SIZE;
 
   return dequeud;
+}
+
+void TinySerial::flush() {
+  head_ = tail_ = 0;
 }

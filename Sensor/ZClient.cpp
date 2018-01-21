@@ -4,8 +4,8 @@
 
 ZClient::ZClient(int txPin, int rxPin) : bee_(txPin, rxPin) {}
 
-void ZClient::begin(long baud) {
-  bee_.begin(baud);
+void ZClient::begin() {
+  bee_.begin();
 
   bee_.getMacAddress(macAddress_);
 }

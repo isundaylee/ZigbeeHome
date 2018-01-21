@@ -14,34 +14,21 @@ const int PIN_ZIGBEE_RX = 4;
 const int PIN_INPUT = 1;
 const int PIN_LED = 0;
 
-TinySerial serial(PIN_ZIGBEE_TX, PIN_ZIGBEE_RX);
-// ZClient client(PIN_ZIGBEE_TX, PIN_ZIGBEE_RX);
+// TinySerial serial(PIN_ZIGBEE_TX, PIN_ZIGBEE_RX);
+ZClient client(PIN_ZIGBEE_TX, PIN_ZIGBEE_RX);
 
 ISR(WDT_vect) {}
 
 void setup() {
-  serial.begin(115200);
-  DDRB |= 1;
+  client.begin();
+
+  DDRB ^= 4;
 }
 
 void loop() {
-  // client.broadcast("ping", "type", "fake_light_bulb");
-  // serial.write((uint8_t) 0xAA);
-  // serial.write((uint8_t) 0xAA);
-  // serial.write((uint8_t) 0xAA);
-  // serial.write((uint8_t) 0xAA);
+  client.broadcast("ping", "type", "fake_light_bulb");
 
-  PORTB ^= 1;
-
-  while (serial.available()) {
-    // serial.read();
-    serial.write(serial.read());
-  }
-
-  PORTB ^= 1;
-
-  // _delay_ms(10000);
-  _delay_loop_2(30000);
+  _delay_ms(1000);
 
   // wdt_reset();
   // MCUSR = 0;
