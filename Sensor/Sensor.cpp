@@ -23,23 +23,26 @@ void setup() {
   client.begin();
 
   DDRB ^= 4;
+  ADCSRA &= ~_BV(ADEN);
 }
 
 void loop() {
   client.broadcast("ping", "type", "fake_light_bulb");
 
-  _delay_ms(1000);
+  // _delay_ms(1000);
 
-  // wdt_reset();
-  // MCUSR = 0;
-  // WDTCR |= (_BV(WDCE) | _BV(WDE));
-  // WDTCR = (_BV(WDIE) | 0b000001);
-  //
-  // ADCSRA &= ~_BV(ADEN);
-  //
-  // set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-  // sei();
-  // sleep_mode();
+  GIMSK &= ~_BV(PCIE);
+
+  wdt_reset();
+  MCUSR = 0;
+  WDTCR |= (_BV(WDCE) | _BV(WDE));
+  WDTCR = (_BV(WDIE) | 0b100001);
+
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  sei();
+  sleep_mode();
+
+  GIMSK |= _BV(PCIE);
 }
 
 int main() {

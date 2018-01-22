@@ -9,7 +9,8 @@ MONITOR_PORT        = /dev/cu.usbserial
 MONITOR_BAUDRATE    = 9600
 
 ISP_PROG            = avrisp
-ISP_PORT            = /dev/cu.wchusbserialfa1220
+# ISP_PORT            = /dev/cu.wchusbserialfa1220
+ISP_PORT            = /dev/cu.usbserial-A9M9DV3R
 
 ALTERNATE_CORE 	    = ATTinyCore
 ALTERNATE_CORE_PATH = /Users/jiahao/Library/Arduino15/packages/ATTinyCore/hardware/avr/1.1.4

@@ -47,7 +47,7 @@ void TinySerial::begin() {
   DDRB &= ~(rxPinMask_);
   PORTB |= (txPinMask_ | rxPinMask_);
 
-  GIMSK |= (1 << PCIE);
+  GIMSK |= _BV(PCIE);
   PCMSK = rxPinMask_;
 
   sei();
