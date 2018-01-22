@@ -9,7 +9,7 @@
 const int Zigbee::WAKEUP_MESSAGE_LENGTH = 10;
 const int Zigbee::WAKEUP_WAIT_TIME = 20;
 const int Zigbee::QUERY_DELAY = 200;
-const int Zigbee::MESSAGE_GAP_DELAY = 10;
+const int Zigbee::MESSAGE_GAP_DELAY = 20;
 
 Zigbee::Zigbee(int txPin, int rxPin) : serial_(txPin, rxPin) {}
 
