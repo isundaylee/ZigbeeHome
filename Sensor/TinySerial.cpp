@@ -9,6 +9,16 @@
 
 volatile size_t count = 0;
 
+#if TINY_SERIAL_RX_DEBUG
+#define TINY_SERIAL_RX_DEBUG_PULSE()                                           \
+  do {                                                                         \
+    PORTB ^= 4;                                                                \
+    PORTB ^= 4;                                                                \
+  } while (0);
+#else
+#define TINY_SERIAL_RX_DEBUG_PULSE()
+#endif
+
 /* static */ TinySerial *TinySerial::listeningSerial_ = NULL;
 /* static */ int TinySerial::listeningTxPinMask_ = 0;
 /* static */ int TinySerial::listeningRxPinMask_ = 0;
@@ -100,6 +110,8 @@ ISR(__vector_PCINT0_FALLING) {
   for (uint8_t bit = 1; bit != 128; bit <<= 1) {
     uint8_t not_bit = ~bit;
 
+    TINY_SERIAL_RX_DEBUG_PULSE();
+
     if ((PINB & TinySerial::listeningRxPinMask_) != 0) {
       byte |= bit;
     } else {
@@ -108,6 +120,8 @@ ISR(__vector_PCINT0_FALLING) {
 
     __builtin_avr_delay_cycles(TINY_SERIAL_RX_DELAY);
   }
+
+  TINY_SERIAL_RX_DEBUG_PULSE();
 
   if ((PINB & TinySerial::listeningRxPinMask_) != 0) {
     byte |= 128;
@@ -154,6 +168,4 @@ int TinySerial::read() {
   return dequeud;
 }
 
-void TinySerial::flush() {
-  head_ = tail_ = 0;
-}
+void TinySerial::flush() { head_ = tail_ = 0; }

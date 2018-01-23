@@ -8,8 +8,8 @@
 
 const int Zigbee::WAKEUP_MESSAGE_LENGTH = 10;
 const int Zigbee::WAKEUP_WAIT_TIME = 20;
-const int Zigbee::QUERY_DELAY = 200;
-const int Zigbee::MESSAGE_GAP_DELAY = 20;
+const int Zigbee::QUERY_WAIT_TIME = 500;
+const int Zigbee::MESSAGE_GAP_DELAY = 30;
 
 Zigbee::Zigbee(int txPin, int rxPin) : serial_(txPin, rxPin) {}
 
@@ -22,7 +22,7 @@ bool Zigbee::query(const char *query, uint8_t *out, size_t responseSize) {
   serial_.write((uint8_t)0xFF);
 
   // We account for the 0xFB prefix here. We also consume it before returning.
-  if (this->waitForBytes(1 + responseSize, QUERY_DELAY)) {
+  if (this->waitForBytes(1 + responseSize, QUERY_WAIT_TIME)) {
     serial_.read();
 
     for (size_t i = 0; i < responseSize; i++) {

@@ -6,7 +6,7 @@ class Zigbee {
 private:
   static const int WAKEUP_MESSAGE_LENGTH;
   static const int WAKEUP_WAIT_TIME;
-  static const int QUERY_DELAY;
+  static const int QUERY_WAIT_TIME;
   static const int MESSAGE_GAP_DELAY;
 
   TinySerial serial_;

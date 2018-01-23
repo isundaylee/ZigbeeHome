@@ -11,11 +11,18 @@ extern "C" void __vector_2(void)
 extern "C" void __vector_PCINT0_FALLING(void)
     __attribute__((signal, used, externally_visible));
 
+// #define TINY_SERIAL_RX_DEBUG 1
 
 const long TINY_SERIAL_BAUD = 115200;
 const long TINY_SERIAL_TX_DELAY = 56;
 const long TINY_SERIAL_RX_DELAY_INITIAL = 30;
-const long TINY_SERIAL_RX_DELAY = 49;
+
+#if TINY_SERIAL_RX_DEBUG
+const long TINY_SERIAL_RX_DELAY = 52 - 6;
+#else
+const long TINY_SERIAL_RX_DELAY = 52;
+#endif
+
 const long TINY_SERIAL_RX_DELAY_LAST = 30;
 
 class TinySerial {

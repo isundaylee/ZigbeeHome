@@ -14,22 +14,20 @@ const int PIN_ZIGBEE_RX = 4;
 const int PIN_INPUT = 1;
 const int PIN_LED = 0;
 
-// TinySerial serial(PIN_ZIGBEE_TX, PIN_ZIGBEE_RX);
 ZClient client(PIN_ZIGBEE_TX, PIN_ZIGBEE_RX);
 
 ISR(WDT_vect) {}
 
 void setup() {
+  DDRB |= 4;
+
   client.begin();
 
-  DDRB ^= 4;
   ADCSRA &= ~_BV(ADEN);
 }
 
 void loop() {
   client.broadcast("ping", "type", "fake_light_bulb");
-
-  // _delay_ms(1000);
 
   GIMSK &= ~_BV(PCIE);
 
