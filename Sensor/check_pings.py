@@ -24,8 +24,9 @@ def report():
     count = c_correct + c_incorrect + c_missed
 
     if count % REPORT_INTERVAL == 0:
-        log("Stats: count = %d, correct = %.2f, incorrect = %.2f, missed = %.2f" %
-            (count, c_correct / count, c_incorrect / count, c_missed / count))
+        log("Stats: count = %d, correct = %.2f, incorrect = %.2f (%d), missed = %.2f (%d)" %
+            (count, c_correct / count, c_incorrect / count, c_incorrect,
+            c_missed / count, c_missed))
 
 with serial.Serial('/dev/tty.Repleo-PL2303-002012FA', 115200, timeout=0.1) as s:
     while True:
