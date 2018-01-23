@@ -7,7 +7,7 @@
 #include <string.h>
 
 const int Zigbee::WAKEUP_MESSAGE_LENGTH = 10;
-const int Zigbee::WAKEUP_WAIT_TIME_INITIAL = 10;
+const int Zigbee::WAKEUP_WAIT_TIME_INITIAL = 20;
 const int Zigbee::WAKEKE_WAIT_TIME_BACKOFF_FACTOR = 2;
 const int Zigbee::WAKEUP_WAIT_TIME_MAX = 80;
 const int Zigbee::WAKEUP_MAX_TRIES = 7;
@@ -17,10 +17,11 @@ const int Zigbee::MESSAGE_GAP_DELAY = 20;
 Zigbee::Zigbee(int txPin, int rxPin) : serial_(txPin, rxPin), lastOutTime_(0) {}
 
 void Zigbee::beforeMessage() {
-  serial_.flush();
   while (Tick::since(lastOutTime_) < MESSAGE_GAP_DELAY) {
     _delay_ms(1);
   }
+
+  serial_.flush();
 }
 
 void Zigbee::afterMessage() { lastOutTime_ = Tick::value; }
