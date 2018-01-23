@@ -4,9 +4,6 @@
 
 class ZClient {
 private:
-  Zigbee bee_;
-  uint8_t macAddress_[8];
-
   static const size_t MAX_SIZE = 256;
 
   static const uint8_t BEGIN = 0x00;
@@ -21,9 +18,16 @@ private:
   uint8_t *encodeString(const char *str, uint8_t *ptr);
 
 public:
+  Zigbee bee;
+  uint8_t macAddress[8];
+
+  bool ready = false;
+
   ZClient(int txPin, int rxPin);
 
   void begin();
 
-  void broadcast(const char *method, const char *key, const char *value);
+  bool checkReadyStatus();
+  void waitUntilReady();
+  bool broadcast(const char *method, const char *key, const char *value);
 };

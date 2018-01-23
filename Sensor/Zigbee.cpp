@@ -7,15 +7,26 @@
 #include <string.h>
 
 const int Zigbee::WAKEUP_MESSAGE_LENGTH = 10;
-const int Zigbee::WAKEUP_WAIT_TIME = 20;
+const int Zigbee::WAKEUP_WAIT_TIME_INITIAL = 10;
+const int Zigbee::WAKEKE_WAIT_TIME_BACKOFF_FACTOR = 2;
+const int Zigbee::WAKEUP_WAIT_TIME_MAX = 80;
+const int Zigbee::WAKEUP_MAX_TRIES = 7;
 const int Zigbee::QUERY_WAIT_TIME = 500;
-const int Zigbee::MESSAGE_GAP_DELAY = 30;
+const int Zigbee::MESSAGE_GAP_DELAY = 20;
 
-Zigbee::Zigbee(int txPin, int rxPin) : serial_(txPin, rxPin) {}
+Zigbee::Zigbee(int txPin, int rxPin) : serial_(txPin, rxPin), lastOutTime_(0) {}
+
+void Zigbee::beforeMessage() {
+  serial_.flush();
+  while (Tick::since(lastOutTime_) < MESSAGE_GAP_DELAY) {
+    _delay_ms(1);
+  }
+}
+
+void Zigbee::afterMessage() { lastOutTime_ = Tick::value; }
 
 bool Zigbee::query(const char *query, uint8_t *out, size_t responseSize) {
-  this->wakeUp();
-  this->flushSerialInput();
+  Zigbee::beforeMessage();
 
   serial_.write((uint8_t)0xFE);
   serial_.write(query);
@@ -29,8 +40,10 @@ bool Zigbee::query(const char *query, uint8_t *out, size_t responseSize) {
       out[i] = serial_.read();
     }
 
+    Zigbee::afterMessage();
     return true;
   } else {
+    Zigbee::afterMessage();
     return false;
   }
 }
@@ -47,30 +60,36 @@ bool Zigbee::waitForBytes(size_t count, size_t maxWaitTime) {
   return false;
 }
 
-void Zigbee::flushSerialInput() { serial_.flush(); }
+bool Zigbee::wakeUp() {
+  Zigbee::beforeMessage();
 
-void Zigbee::wakeUp() {
-  this->flushSerialInput();
+  size_t wait_time = WAKEUP_WAIT_TIME_INITIAL;
+  for (size_t tries = 0; tries < WAKEUP_MAX_TRIES; tries++) {
+    serial_.flush();
 
-  for (size_t i = 0; i < WAKEUP_MESSAGE_LENGTH; i++) {
-    serial_.write((uint8_t)0x00);
+    for (size_t i = 0; i < WAKEUP_MESSAGE_LENGTH; i++) {
+      serial_.write((uint8_t)0x00);
+    }
+
+    if (this->waitForBytes(2, wait_time)) {
+      Zigbee::afterMessage();
+      return true;
+    }
+
+    if (wait_time < WAKEUP_WAIT_TIME_MAX) {
+      wait_time *= WAKEKE_WAIT_TIME_BACKOFF_FACTOR;
+    }
   }
 
-  if (this->waitForBytes(2, WAKEUP_WAIT_TIME)) {
-    _delay_ms(MESSAGE_GAP_DELAY);
-
-    this->flushSerialInput();
-  } else {
-    this->wakeUp();
-  }
+  return false;
 }
 
 void Zigbee::begin() { serial_.begin(); }
 
-void Zigbee::broadcast(uint8_t *buf, size_t len) {
-  this->wakeUp();
-
+bool Zigbee::broadcast(uint8_t *buf, size_t len) {
   size_t totalLen = 2 + len;
+
+  Zigbee::beforeMessage();
 
   serial_.write((uint8_t)0xFC);
   serial_.write((uint8_t)totalLen);
@@ -80,10 +99,29 @@ void Zigbee::broadcast(uint8_t *buf, size_t len) {
   for (size_t i = 0; i < len; i++) {
     serial_.write((uint8_t)buf[i]);
   }
+
+  Zigbee::afterMessage();
+  return true;
 }
 
-void Zigbee::broadcast(const char *buf) {
-  this->broadcast((uint8_t *)buf, strlen(buf));
+bool Zigbee::broadcast(const char *buf) {
+  return this->broadcast((uint8_t *)buf, strlen(buf));
 }
 
-void Zigbee::getMacAddress(uint8_t *out) { this->query("\x01\x06", out, 8); }
+bool Zigbee::getMacAddress(uint8_t *out) {
+  if (!this->query("\x01\x06", out, 8)) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
+int Zigbee::getNetworkState() {
+  uint8_t buf[1];
+
+  if (!this->query("\x01\x02", buf, 1)) {
+    return ERROR;
+  }
+
+  return buf[0];
+}

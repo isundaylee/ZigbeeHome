@@ -4,6 +4,7 @@
 
 #include <util/delay.h>
 
+#include "Tick.h"
 #include "TinySerial.h"
 #include "ZClient.h"
 #include "Zigbee.h"
@@ -21,20 +22,33 @@ ISR(WDT_vect) {}
 void setup() {
   DDRB |= 4;
 
+  Tick::begin();
   client.begin();
 
   ADCSRA &= ~_BV(ADEN);
 }
 
 void loop() {
-  client.broadcast("ping", "type", "fake_light_bulb");
+  client.bee.wakeUp();
+
+  if (client.checkReadyStatus()) {
+    PORTB |= 4;
+  } else {
+    PORTB &= ~4;
+  }
+
+  if (client.ready) {
+    client.broadcast("ping", "type", "fake_light_bulb");
+  }
+
+  // Watchdog sleep section
 
   GIMSK &= ~_BV(PCIE);
 
   wdt_reset();
   MCUSR = 0;
   WDTCR |= (_BV(WDCE) | _BV(WDE));
-  WDTCR = (_BV(WDIE) | 0b100001);
+  WDTCR = (_BV(WDIE) | 0b000110);
 
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   sei();

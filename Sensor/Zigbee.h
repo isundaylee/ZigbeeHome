@@ -1,28 +1,42 @@
 #pragma once
 
 #include "TinySerial.h"
+#include "Tick.h"
 
 class Zigbee {
 private:
   static const int WAKEUP_MESSAGE_LENGTH;
-  static const int WAKEUP_WAIT_TIME;
+  static const int WAKEUP_WAIT_TIME_INITIAL;
+  static const int WAKEKE_WAIT_TIME_BACKOFF_FACTOR;
+  static const int WAKEUP_WAIT_TIME_MAX;
+  static const int WAKEUP_MAX_TRIES;
+  static const int QUERY_QUESCE_TIME;
   static const int QUERY_WAIT_TIME;
   static const int MESSAGE_GAP_DELAY;
 
   TinySerial serial_;
+  tick_t lastOutTime_;
 
+  void beforeMessage();
+  void afterMessage();
   bool query(const char *query, uint8_t *out, size_t responseSize);
   bool waitForBytes(size_t count, size_t maxWaitTime);
-  void flushSerialInput();
-  void wakeUp();
 
 public:
+  static const int NETWORK_DOWN = 0;
+  static const int NETWORK_UP = 1;
+
+  static const int ERROR = -1;
+
   Zigbee(int txPin, int rxPin);
 
   void begin();
 
-  void broadcast(uint8_t *buf, size_t len);
-  void broadcast(const char *buf);
+  bool wakeUp();
 
-  void getMacAddress(uint8_t *out);
+  bool broadcast(uint8_t *buf, size_t len);
+  bool broadcast(const char *buf);
+
+  bool getMacAddress(uint8_t *out);
+  int getNetworkState();
 };

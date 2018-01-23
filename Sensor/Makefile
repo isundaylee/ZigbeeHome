@@ -20,3 +20,8 @@ VARIANT 		    = tinyX5
 F_CPU 			    = 8000000L
 
 include /usr/local/opt/arduino-mk/Arduino.mk
+
+u: ispload
+
+p:
+	python3 check_pings.py

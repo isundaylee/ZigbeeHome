@@ -5,7 +5,7 @@ import sys
 
 BEGIN = 0x00
 END = 0xFF
-THRESHOLD = 10.0
+THRESHOLD = 2.0
 REPORT_INTERVAL = 10
 
 last = None
