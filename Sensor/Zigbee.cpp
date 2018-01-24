@@ -7,7 +7,7 @@
 #include <string.h>
 
 const int Zigbee::WAKEUP_MESSAGE_LENGTH = 10;
-const int Zigbee::WAKEUP_WAIT_TIME_INITIAL = 20;
+const int Zigbee::WAKEUP_WAIT_TIME_INITIAL = 40;
 const int Zigbee::WAKEKE_WAIT_TIME_BACKOFF_FACTOR = 2;
 const int Zigbee::WAKEUP_WAIT_TIME_MAX = 80;
 const int Zigbee::WAKEUP_MAX_TRIES = 7;
