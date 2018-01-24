@@ -19,6 +19,7 @@ c_missed = 0
 
 def log(message):
     print('[%s] %s' % (datetime.datetime.now(), message))
+    sys.stdout.flush()
 
 def report():
     count = c_correct + c_incorrect + c_missed
