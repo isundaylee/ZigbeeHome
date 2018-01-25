@@ -8,6 +8,7 @@ class Tick {
 public:
     static tick_t value;
 
+    static void reset();
     static void begin();
     static tick_t since(tick_t t);
 };

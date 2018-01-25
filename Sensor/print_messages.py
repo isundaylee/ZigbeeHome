@@ -73,6 +73,9 @@ with serial.Serial('/dev/tty.Repleo-PL2303-002012FA', 115200, timeout=0.1) as s:
                 elif buf[start] == 0x02:
                     log_string += ' %s' % buf[start + 2: start + 2 + buf[start + 1]].decode()
                     start += (buf[start + 1] + 2)
+                elif buf[start] == 0x05:
+                    log_string += ' %d' % (buf[start + 1] * 256 + buf[start + 2])
+                    start += 3
                 else:
                     assert(False)
 

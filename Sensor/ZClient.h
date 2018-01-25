@@ -22,6 +22,7 @@ private:
   uint8_t *encodeValue(bool value, uint8_t *ptr);
   uint8_t *encodeValue(const char *str, uint8_t *ptr);
   uint8_t *encodeValue(uint8_t byte, uint8_t *ptr);
+  uint8_t *encodeValue(uint16_t number, uint8_t *ptr);
 
 public:
   static const device_t SMOKE_DETECTOR = 0x01;
@@ -29,6 +30,8 @@ public:
   static const value_type_t BOOL = 0x01;
   static const value_type_t STRING = 0x02;
   static const value_type_t UINT8 = 0x03;
+  static const value_type_t INT8 = 0x04;
+  static const value_type_t UINT16 = 0x05;
 
   Zigbee bee;
   uint8_t macAddress[8];

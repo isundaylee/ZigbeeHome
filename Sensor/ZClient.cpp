@@ -77,3 +77,11 @@ uint8_t *ZClient::encodeValue(uint8_t byte, uint8_t *ptr) {
 
   return ptr;
 }
+
+uint8_t *ZClient::encodeValue(uint16_t number, uint8_t *ptr) {
+  ptr = this->encodeByte(UINT16, ptr);
+  ptr = this->encodeByte((number & 0xFF00) >> 8, ptr);
+  ptr = this->encodeByte(number & 0x00FF, ptr);
+
+  return ptr;
+}

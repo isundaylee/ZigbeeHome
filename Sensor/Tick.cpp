@@ -12,6 +12,8 @@ static_assert(F_CPU == 8000000,
 
 ISR(TIMER1_COMPA_vect) { Tick::value++; }
 
+/* static */ void Tick::reset() { value = 0; }
+
 /* static */ void Tick::begin() {
   TCCR1 |= _BV(CTC1);
   TCCR1 |= _BV(CS13) | _BV(CS12) | _BV(CS10);
