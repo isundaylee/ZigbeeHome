@@ -109,6 +109,30 @@ bool Zigbee::broadcast(const char *buf) {
   return this->broadcast((uint8_t *)buf, strlen(buf));
 }
 
+bool Zigbee::unicast(addr_t addr, uint8_t *buf, size_t len) {
+  size_t totalLen = 4 + len;
+
+  Zigbee::beforeMessage();
+
+  serial_.write((uint8_t)0xFC);
+  serial_.write((uint8_t)totalLen);
+  serial_.write((uint8_t)0x03);
+  serial_.write((uint8_t)0x01);
+  serial_.write((uint8_t) ((addr & 0xFF00) >> 8));
+  serial_.write((uint8_t) (addr & 0x00FF));
+
+  for (size_t i = 0; i < len; i++) {
+    serial_.write((uint8_t)buf[i]);
+  }
+
+  Zigbee::afterMessage();
+  return true;
+}
+
+bool Zigbee::unicast(addr_t addr, const char *buf) {
+  return this->unicast(addr, (uint8_t *)buf, strlen(buf));
+}
+
 bool Zigbee::getMacAddress(uint8_t *out) {
   if (!this->query("\x01\x06", out, 8)) {
     return false;

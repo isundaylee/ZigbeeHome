@@ -44,7 +44,8 @@ public:
   void waitUntilReady();
 
   template <typename ValueType>
-  bool broadcast(const char *method, const char *key, ValueType value) {
+  bool unicast(addr_t addr, const char *method, const char *key,
+               ValueType value) {
     if (!ready) {
       return false;
     }
@@ -60,7 +61,7 @@ public:
     ptr = encodeValue(value, ptr);
     *(ptr++) = END;
 
-    if (!bee.broadcast(buf, ptr - buf)) {
+    if (!bee.unicast(addr, buf, ptr - buf)) {
       ready = false;
       return false;
     } else {

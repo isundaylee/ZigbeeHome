@@ -15,8 +15,10 @@ const int PIN_INPUT = 2;
 const int PIN_ZIGBEE_TX = 3;
 const int PIN_ZIGBEE_RX = 4;
 
-const uint8_t WDT_SLEEP_FLAG = _BV(WDP2) | _BV(WDP1);
-const size_t WDT_SLEEP_MULTIPLIER = 1;
+const uint8_t WDT_SLEEP_FLAG_8S = _BV(WDP3) | _BV(WDP0);
+const uint8_t WDT_SLEEP_FLAG_1S = _BV(WDP2) | _BV(WDP1);
+const uint8_t WDT_SLEEP_FLAG = WDT_SLEEP_FLAG_8S;
+const size_t WDT_SLEEP_MULTIPLIER = 7;
 
 ZClient client(PIN_ZIGBEE_TX, PIN_ZIGBEE_RX, ZClient::SMOKE_DETECTOR);
 
@@ -38,17 +40,7 @@ void deepSleep(uint8_t timeFlag) {
   GIMSK |= _BV(PCIE);
 }
 
-ISR(WDT_vect) {
-  static int counter = 0;
-
-  counter++;
-
-  if (counter == WDT_SLEEP_MULTIPLIER) {
-    counter = 0;
-  } else {
-    deepSleep(WDT_SLEEP_FLAG);
-  }
-}
+ISR(WDT_vect) {}
 
 void setup() {
   DDRB |= _BV(PIN_NETWORK_LED);
@@ -71,13 +63,15 @@ void loop() {
 
   if (client.ready) {
     if ((PINB & _BV(PIN_INPUT)) == 0) {
-      client.broadcast("report", "value", false);
+      client.unicast(0x0000, "report", "value", false);
     } else {
-      client.broadcast("report", "value", true);
+      client.unicast(0x0000, "report", "value", true);
     }
   }
 
-  deepSleep(WDT_SLEEP_FLAG);
+  for (size_t i = 0; i < WDT_SLEEP_MULTIPLIER; i++) {
+    deepSleep(WDT_SLEEP_FLAG);
+  }
 }
 
 int main() {

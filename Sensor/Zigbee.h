@@ -3,6 +3,8 @@
 #include "TinySerial.h"
 #include "Tick.h"
 
+typedef uint16_t addr_t;
+
 class Zigbee {
 private:
   static const int WAKEUP_MESSAGE_LENGTH;
@@ -36,6 +38,9 @@ public:
 
   bool broadcast(uint8_t *buf, size_t len);
   bool broadcast(const char *buf);
+
+  bool unicast(addr_t addr, uint8_t *buf, size_t len);
+  bool unicast(addr_t addr, const char *buf);
 
   bool getMacAddress(uint8_t *out);
   int getNetworkState();
