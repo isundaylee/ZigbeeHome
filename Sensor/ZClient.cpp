@@ -6,7 +6,8 @@
 
 #include <string.h>
 
-ZClient::ZClient(int txPin, int rxPin) : bee(txPin, rxPin) {}
+ZClient::ZClient(int txPin, int rxPin, device_t deviceType)
+    : bee(txPin, rxPin), deviceType(deviceType) {}
 
 bool ZClient::checkReadyStatus() {
   ready = (bee.getNetworkState() == Zigbee::NETWORK_UP);
@@ -50,8 +51,6 @@ uint8_t *ZClient::encodeByte(uint8_t byte, uint8_t *ptr) {
 }
 
 uint8_t *ZClient::encodeBytes(uint8_t *buf, size_t len, uint8_t *ptr) {
-  ptr = this->encodeByte(len, ptr);
-
   for (size_t i = 0; i < len; i++) {
     ptr = this->encodeByte(buf[i], ptr);
   }
@@ -59,30 +58,22 @@ uint8_t *ZClient::encodeBytes(uint8_t *buf, size_t len, uint8_t *ptr) {
   return ptr;
 }
 
-uint8_t *ZClient::encodeString(const char *str, uint8_t *ptr) {
+uint8_t *ZClient::encodeValue(bool value, uint8_t *ptr) {
+  ptr = this->encodeByte(BOOL, ptr);
+  ptr = this->encodeByte(value ? 1 : 0, ptr);
+
+  return ptr;
+}
+
+uint8_t *ZClient::encodeValue(const char *str, uint8_t *ptr) {
+  ptr = this->encodeByte(STRING, ptr);
+  ptr = this->encodeByte(strlen(str), ptr);
   return this->encodeBytes((uint8_t *)str, strlen(str), ptr);
 }
 
-bool ZClient::broadcast(const char *method, const char *key,
-                        const char *value) {
-  if (!ready) {
-    return false;
-  }
+uint8_t *ZClient::encodeValue(uint8_t byte, uint8_t *ptr) {
+  ptr = this->encodeByte(UINT8, ptr);
+  ptr = this->encodeByte(byte, ptr);
 
-  static uint8_t buf[MAX_SIZE];
-  uint8_t *ptr = buf;
-
-  *(ptr++) = BEGIN;
-  ptr = encodeBytes(macAddress, 8, ptr);
-  ptr = encodeString(method, ptr);
-  ptr = encodeString(key, ptr);
-  ptr = encodeString(value, ptr);
-  *(ptr++) = END;
-
-  if (!bee.broadcast(buf, ptr - buf)) {
-    ready = false;
-    return false;
-  } else {
-    return true;
-  }
+  return ptr;
 }

@@ -10,15 +10,15 @@
 #include "Zigbee.h"
 
 const int PIN_NETWORK_LED = 0;
-const int PIN_INPUT = 1;
+const int PIN_INPUT = 2;
 
 const int PIN_ZIGBEE_TX = 3;
 const int PIN_ZIGBEE_RX = 4;
 
-const uint8_t WDT_SLEEP_FLAG = _BV(WDP3) | _BV(WDP0);
-const size_t WDT_SLEEP_MULTIPLIER = 2;
+const uint8_t WDT_SLEEP_FLAG = _BV(WDP2) | _BV(WDP1);
+const size_t WDT_SLEEP_MULTIPLIER = 1;
 
-ZClient client(PIN_ZIGBEE_TX, PIN_ZIGBEE_RX);
+ZClient client(PIN_ZIGBEE_TX, PIN_ZIGBEE_RX, ZClient::SMOKE_DETECTOR);
 
 void deepSleep(uint8_t timeFlag) {
   // Disables pin change interrupt  and pin output during deep sleep
@@ -64,13 +64,17 @@ void loop() {
   client.bee.wakeUp();
 
   if (client.checkReadyStatus()) {
-    PORTB |= _BV(PIN_NETWORK_LED);
-  } else {
     PORTB &= ~_BV(PIN_NETWORK_LED);
+  } else {
+    PORTB |= _BV(PIN_NETWORK_LED);
   }
 
   if (client.ready) {
-    client.broadcast("ping", "type", "fake_light_bulb");
+    if ((PINB & _BV(PIN_INPUT)) == 0) {
+      client.broadcast("report", "value", false);
+    } else {
+      client.broadcast("report", "value", true);
+    }
   }
 
   deepSleep(WDT_SLEEP_FLAG);
