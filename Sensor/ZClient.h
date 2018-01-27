@@ -7,7 +7,7 @@ typedef uint8_t value_type_t;
 
 class ZClient {
 private:
-  static const size_t MAX_SIZE = 256;
+  static const size_t SEND_BUFFER_SIZE = 256;
 
   static const uint8_t BEGIN = 0x00;
   static const uint8_t END = 0xFF;
@@ -15,6 +15,8 @@ private:
   static const uint8_t ESC_BEGIN = 0x01;
   static const uint8_t ESC_END = 0x02;
   static const uint8_t ESC_ESC = 0x03;
+
+  static uint8_t sendBuffer_[SEND_BUFFER_SIZE];
 
   uint8_t *encodeByte(uint8_t byte, uint8_t *ptr);
   uint8_t *encodeBytes(uint8_t *buf, size_t len, uint8_t *ptr);
@@ -53,8 +55,7 @@ public:
       return false;
     }
 
-    static uint8_t buf[MAX_SIZE];
-    uint8_t *ptr = buf;
+    uint8_t *ptr = sendBuffer_;
 
     *(ptr++) = BEGIN;
     ptr = encodeBytes(macAddress, 8, ptr);
@@ -64,7 +65,7 @@ public:
     ptr = encodeValue(value, ptr);
     *(ptr++) = END;
 
-    if (!bee.unicast(addr, buf, ptr - buf)) {
+    if (!bee.unicast(addr, sendBuffer_, ptr - sendBuffer_)) {
       ready = false;
       return false;
     } else {

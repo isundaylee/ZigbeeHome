@@ -26,14 +26,16 @@ const uint8_t WDT_SLEEP_FLAG_2S = 0b00000111;
 const uint8_t WDT_SLEEP_FLAG_4S = 0b00100000;
 const uint8_t WDT_SLEEP_FLAG_8S = 0b00100001;
 
-const uint8_t WDT_SLEEP_FLAG = WDT_SLEEP_FLAG_128MS;
-const size_t ROUTINE_REPORT_INTERVAL = 8 * 60;
-const size_t MINIMUM_ATTEMPT_GAP = 8 * 1;
+const size_t NETWORK_LED_BLINK_TIME_MS = 200;
+
+const uint8_t WDT_SLEEP_FLAG = WDT_SLEEP_FLAG_1S;
+const size_t ROUTINE_REPORT_INTERVAL = 3;
+const size_t MINIMUM_ATTEMPT_GAP = 1;
 
 ZClient client(PIN_ZIGBEE_TX, PIN_ZIGBEE_RX, ZClient::SMOKE_DETECTOR);
 
 void deepSleep(uint8_t timeFlag) {
-  // Disables pin change interrupt  and pin output during deep sleep
+  // Disables pin change interrupt during deep sleep
   GIMSK &= ~_BV(PCIE);
 
   wdt_reset();
@@ -45,7 +47,6 @@ void deepSleep(uint8_t timeFlag) {
   sleep_enable();
   sleep_cpu();
   sleep_disable();
-  // sleep_mode();
 
   GIMSK |= _BV(PCIE);
 }
@@ -56,36 +57,44 @@ void setup() {
   DDRB |= _BV(PIN_NETWORK_LED);
 
   Tick::begin();
+
+  PORTB |= _BV(PIN_NETWORK_LED);
   client.begin();
+  PORTB &= ~_BV(PIN_NETWORK_LED);
 
   ADCSRA &= ~_BV(ADEN);
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 }
 
 void loop() {
-  static bool lastReported = false;
+  static bool lastReportedValue = false;
+  static bool hasSentHello = false;
   static size_t sleepsUntilLastAttempt = MINIMUM_ATTEMPT_GAP;
   static size_t sleepsSinceLastReport = ROUTINE_REPORT_INTERVAL;
 
   bool value = ((PINB & _BV(PIN_INPUT)) != 0);
-  bool shouldReport = false;
 
   if ((sleepsUntilLastAttempt >= MINIMUM_ATTEMPT_GAP) &&
       ((sleepsSinceLastReport >= ROUTINE_REPORT_INTERVAL) ||
-       (value != lastReported))) {
+       (value != lastReportedValue))) {
     client.bee.wakeUp();
 
-    if (client.checkReadyStatus()) {
-      PORTB &= ~_BV(PIN_NETWORK_LED);
-    } else {
+    if (!client.checkReadyStatus()) {
       PORTB |= _BV(PIN_NETWORK_LED);
+      _delay_ms(NETWORK_LED_BLINK_TIME_MS);
+      PORTB &= ~_BV(PIN_NETWORK_LED);
     }
 
     sleepsUntilLastAttempt = 0;
 
     if (client.ready) {
-      lastReported = value;
+      lastReportedValue = value;
       sleepsSinceLastReport = 0;
+
+      if (!hasSentHello) {
+        hasSentHello = true;
+        client.unicast(0x0000, "hello", "", "");
+      }
 
       client.unicast(0x0000, "report", "value", value);
     }

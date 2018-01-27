@@ -6,6 +6,8 @@
 
 #include <string.h>
 
+/* static */ uint8_t ZClient::sendBuffer_[ZClient::SEND_BUFFER_SIZE];
+
 ZClient::ZClient(int txPin, int rxPin, device_t deviceType)
     : bee(txPin, rxPin), deviceType(deviceType) {}
 
@@ -28,8 +30,9 @@ void ZClient::begin() {
 
   this->waitUntilReady();
 
-  if (!bee.getMacAddress(macAddress)) {
+  while (!bee.getMacAddress(macAddress)) {
     ready = false;
+    this->waitUntilReady();
   }
 }
 

@@ -12,7 +12,7 @@ const int Zigbee::WAKEKE_WAIT_TIME_BACKOFF_FACTOR = 2;
 const int Zigbee::WAKEUP_WAIT_TIME_MAX = 200;
 const int Zigbee::WAKEUP_MAX_TRIES = 7;
 const int Zigbee::QUERY_WAIT_TIME = 500;
-const int Zigbee::MESSAGE_GAP_DELAY = 20;
+const int Zigbee::MESSAGE_GAP_DELAY = 100;
 
 Zigbee::Zigbee(int txPin, int rxPin) : serial_(txPin, rxPin), lastOutTime_(0) {}
 
