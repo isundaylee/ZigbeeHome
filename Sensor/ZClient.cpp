@@ -18,21 +18,27 @@ bool ZClient::checkReadyStatus() {
 }
 
 void ZClient::waitUntilReady() {
-  while (!this->checkReadyStatus()) {
-    _delay_ms(100);
-  }
+  while (true) {
+    this->bee.wakeUp();
+    ready = this->checkReadyStatus();
 
-  ready = true;
+    if (ready) {
+      return;
+    }
+
+    _delay_ms(1000);
+  }
 }
 
 void ZClient::begin() {
   bee.begin();
 
-  this->waitUntilReady();
-
-  while (!bee.getMacAddress(macAddress)) {
-    ready = false;
+  while (true) {
     this->waitUntilReady();
+
+    if (bee.getMacAddress(macAddress, 2)) {
+      return;
+    }
   }
 }
 

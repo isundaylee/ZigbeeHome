@@ -17,6 +17,7 @@ DEVICE_TYPE_MAP = {
 MAC_NICKNAMES = {
     '3d:46:9a:17:00:4b:12:00': 'purple',
     '34:f7:b5:16:00:4b:12:00': 'blue',
+    'b5:5d:9a:17:00:4b:12:00': 'red',
 }
 
 last = None
@@ -57,12 +58,14 @@ def mac_to_string(mac):
     mac = ':'.join(map(lambda x: '%02x' % x, mac))
     if mac in MAC_NICKNAMES:
         mac = mac + ' - ' + ('%6s' % MAC_NICKNAMES[mac])
+    else:
+        mac = mac + ' - !!!!!!'
     return mac
 
 def bytes_to_string(b):
     return ' '.join(map(lambda c: '%02x' % c, b))
 
-with serial.Serial('/dev/tty.Repleo-PL2303-002012FA', 115200, timeout=0.1) as s:
+with serial.Serial('/dev/tty.wchusbserialfa1230', 115200, timeout=0.1) as s:
     while True:
         buf += s.read()
 

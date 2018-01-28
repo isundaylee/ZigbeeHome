@@ -1,7 +1,7 @@
 #pragma once
 
-#include "TinySerial.h"
 #include "Tick.h"
+#include "TinySerial.h"
 
 typedef uint16_t addr_t;
 
@@ -42,6 +42,6 @@ public:
   bool unicast(addr_t addr, uint8_t *buf, size_t len);
   bool unicast(addr_t addr, const char *buf);
 
-  bool getMacAddress(uint8_t *out);
+  bool getMacAddress(uint8_t *out, size_t confirmations = 0);
   int getNetworkState();
 };

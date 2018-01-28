@@ -12,7 +12,7 @@ const int Zigbee::WAKEKE_WAIT_TIME_BACKOFF_FACTOR = 2;
 const int Zigbee::WAKEUP_WAIT_TIME_MAX = 200;
 const int Zigbee::WAKEUP_MAX_TRIES = 7;
 const int Zigbee::QUERY_WAIT_TIME = 500;
-const int Zigbee::MESSAGE_GAP_DELAY = 100;
+const int Zigbee::MESSAGE_GAP_DELAY = 200;
 
 Zigbee::Zigbee(int txPin, int rxPin) : serial_(txPin, rxPin), lastOutTime_(0) {}
 
@@ -118,8 +118,8 @@ bool Zigbee::unicast(addr_t addr, uint8_t *buf, size_t len) {
   serial_.write((uint8_t)totalLen);
   serial_.write((uint8_t)0x03);
   serial_.write((uint8_t)0x01);
-  serial_.write((uint8_t) ((addr & 0xFF00) >> 8));
-  serial_.write((uint8_t) (addr & 0x00FF));
+  serial_.write((uint8_t)((addr & 0xFF00) >> 8));
+  serial_.write((uint8_t)(addr & 0x00FF));
 
   for (size_t i = 0; i < len; i++) {
     serial_.write((uint8_t)buf[i]);
@@ -133,12 +133,26 @@ bool Zigbee::unicast(addr_t addr, const char *buf) {
   return this->unicast(addr, (uint8_t *)buf, strlen(buf));
 }
 
-bool Zigbee::getMacAddress(uint8_t *out) {
+bool Zigbee::getMacAddress(uint8_t *out, size_t confirmations /* = 0 */) {
+  uint8_t buf[8];
+
   if (!this->query("\x01\x06", out, 8)) {
     return false;
-  } else {
-    return true;
   }
+
+  for (size_t i = 0; i < confirmations; i++) {
+    if (!this->query("\x01\x06", buf, 8)) {
+      return false;
+    }
+
+    for (size_t j = 0; j < 8; j++) {
+      if (buf[j] != out[j]) {
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 int Zigbee::getNetworkState() {
