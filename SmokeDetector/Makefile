@@ -1,55 +1,42 @@
-# Makefile for blink demo
-
-#TOOLS = arm-linux-gnu
 TOOLS = arm-none-eabi
 
-# Assembling with gcc makes it want crt0 at link time.
-#AS = $(TOOLS)-gcc
-AS = $(TOOLS)-as
-# Use the -g flag if you intend to use gdb
-#CC = $(TOOLS)-gcc -mcpu=cortex-m3 -mthumb
-CC = $(TOOLS)-gcc -mcpu=cortex-m3 -mthumb -g
+CFLAGS 	= -mcpu=cortex-m3 -mthumb -g
+CFLAGS 	+= -I./
+CFLAGS 	+= -I./lib/CMSIS/Include
+CFLAGS 	+= -I./lib/CMSIS/Device/ST/STM32F1xx/Include
+CFLAGS	+= -DSTM32F103x6
 
-#LD = $(TOOLS)-gcc
-LD = $(TOOLS)-ld.bfd
+AS 		= $(TOOLS)-as
+CC 		= $(TOOLS)-gcc
+LD 		= $(TOOLS)-ld.bfd
 OBJCOPY = $(TOOLS)-objcopy
-DUMP = $(TOOLS)-objdump -d
-GDB = $(TOOLS)-gdb
+DUMP 	= $(TOOLS)-objdump -d
+GDB 	= $(TOOLS)-gdb
 
-OBJS = locore.o blink.o
+OBJS 	= locore.o blink.o
 
 all: blink.bin blink.dump
 
-blink.dump:	blink.elf
+blink.dump: blink.elf
 	$(DUMP) blink.elf >blink.dump
 
-blink.bin:	blink.elf
+blink.bin: blink.elf
 	$(OBJCOPY) blink.elf blink.bin -O binary
 
-blink.elf: 	$(OBJS)
+blink.elf: $(OBJS)
 	$(LD) -T blink.lds -o blink.elf $(OBJS)
 
-locore.o:	locore.s
+locore.o: locore.s
 	$(AS) locore.s -o locore.o
 
-blink.o:	blink.c
-	$(CC) -c blink.c
+blink.o: blink.c
+	$(CC) $(CFLAGS) -c blink.c
 
-# To burn the image:
-#  Connect the STLINK gadget to the target.
-#  Be sure and start openOCD in this directory.
-#    (or else it won't be able to find the bin file).
-#  Then use "make flash" to start an openocd console session.
-#  Type: reset halt
-#  Type: flash write_image erase blink.bin 0x08000000
 flash: blink.bin
-	st-flash write blink.bin 0x08000000
+	st-flash --reset write blink.bin 0x08000000
 
 gdb:
 	$(GDB) --eval-command="target remote localhost:3333" blink.elf
-
-gdbtui:
-	$(GDB) -tui --eval-command="target remote localhost:3333" blink.elf
 
 clean:
 	rm -f *.o blink.elf blink.bin blink.dump
