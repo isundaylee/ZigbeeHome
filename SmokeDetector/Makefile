@@ -19,7 +19,7 @@ SRCDIR		= src
 NAME		= SmokeDetector
 
 CPPOBJS 	= $(BUILDDIR)/$(NAME).o $(BUILDDIR)/USART.o
-OBJS 		= $(CPPOBJS) $(BUILDDIR)/locore.o
+OBJS 		= $(CPPOBJS) $(BUILDDIR)/Boot.o
 
 all: $(BUILDDIR)/$(NAME).bin
 
@@ -30,7 +30,7 @@ all: $(BUILDDIR)/$(NAME).bin
 $(CPPOBJS): $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILDDIR)/locore.o: $(SRCDIR)/locore.s
+$(BUILDDIR)/Boot.o: $(SRCDIR)/Boot.s
 	$(AS) $< -o $@
 
 ################################################################################

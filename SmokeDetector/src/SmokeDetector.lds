@@ -22,7 +22,7 @@ SECTIONS
 {
     .text :
     {
-        locore.o (.text)
+        build/Boot.o (.text)
         * (.text)
     } > flash
 
