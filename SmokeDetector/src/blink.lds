@@ -10,14 +10,24 @@
  * 0x20000000 - 0x20004fff - SRAM (20k)
  * 0x40000000 - 0x40023400 - peripherals
  */
+
+
 MEMORY
 {
-   flash(RX)  : ORIGIN = 0x00000000, LENGTH = 128K
-   sram(WAIL) : ORIGIN = 0x20000000, LENGTH = 20K
+    flash(RX)  : ORIGIN = 0x00000000, LENGTH = 128K
+    sram(WAIL) : ORIGIN = 0x20000000, LENGTH = 20K
 }
 
 SECTIONS
 {
-   .text : { *(.text*) } > flash
-   .bss  : { *(.bss*) } > sram
+    .text :
+    {
+        locore.o (.text)
+        * (.text)
+    } > flash
+
+    .bss :
+    {
+        * (.bss)
+    } > sram
 }
