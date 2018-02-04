@@ -1,42 +1,58 @@
 TOOLS = arm-none-eabi
 
-CFLAGS 	= -mcpu=cortex-m3 -mthumb -g
-CFLAGS 	+= -I./
-CFLAGS 	+= -I./lib/CMSIS/Include
-CFLAGS 	+= -I./lib/CMSIS/Device/ST/STM32F1xx/Include
-CFLAGS	+= -DSTM32F103x6
+AS 			= $(TOOLS)-as
+CC 			= $(TOOLS)-g++
+LD 			= $(TOOLS)-ld.bfd
+OBJCOPY 	= $(TOOLS)-objcopy
+DUMP 		= $(TOOLS)-objdump -d
+GDB 		= $(TOOLS)-gdb
 
-AS 		= $(TOOLS)-as
-CC 		= $(TOOLS)-g++
-LD 		= $(TOOLS)-ld.bfd
-OBJCOPY = $(TOOLS)-objcopy
-DUMP 	= $(TOOLS)-objdump -d
-GDB 	= $(TOOLS)-gdb
+CFLAGS 		= -mcpu=cortex-m3 -mthumb -g
+CFLAGS 		+= -I./include
+CFLAGS 		+= -I./lib/CMSIS/Include
+CFLAGS 		+= -I./lib/CMSIS/Device/ST/STM32F1xx/Include
+CFLAGS		+= -DSTM32F103x6
 
-OBJS 	= locore.o blink.o USART.o
+BUILDDIR 	= build
+SRCDIR		= src
 
-all: blink.bin blink.dump
+CPPOBJS 	= $(BUILDDIR)/blink.o $(BUILDDIR)/USART.o
+OBJS 		= $(CPPOBJS) $(BUILDDIR)/locore.o
 
-blink.dump: blink.elf
-	$(DUMP) blink.elf >blink.dump
+all: $(BUILDDIR)/blink.bin
 
-blink.bin: blink.elf
-	$(OBJCOPY) blink.elf blink.bin -O binary
+################################################################################
+# Compilation stage
+################################################################################
 
-blink.elf: $(OBJS)
-	$(LD) -T blink.lds -o blink.elf $(OBJS)
+$(CPPOBJS): $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
 
-locore.o: locore.s
-	$(AS) locore.s -o locore.o
+$(BUILDDIR)/locore.o: $(SRCDIR)/locore.s
+	$(AS) $< -o $@
 
-%.o: %.cpp
-	$(CC) $(CFLAGS) -c $<
+################################################################################
+# Linking stage
+################################################################################
 
-flash: blink.bin
-	st-flash --reset write blink.bin 0x08000000
+$(BUILDDIR)/blink.elf: $(OBJS) $(SRCDIR)/blink.lds
+	$(LD) -T $(SRCDIR)/blink.lds $(OBJS) -o $@
+
+$(BUILDDIR)/blink.dump: $(BUILDDIR)/blink.elf
+	$(DUMP) $< >$@
+
+$(BUILDDIR)/blink.bin: $(BUILDDIR)/blink.elf
+	$(OBJCOPY) $< $@ -O binary
+
+################################################################################
+# Utility functions
+################################################################################
+
+flash: $(BUILDDIR)/blink.bin
+	st-flash --reset write $(BUILDDIR)/blink.bin 0x08000000
 
 gdb:
 	$(GDB) --eval-command="target remote localhost:3333" blink.elf
 
 clean:
-	rm -f *.o blink.elf blink.bin blink.dump
+	rm -f $(BUILDDIR)/*
