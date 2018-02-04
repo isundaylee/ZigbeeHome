@@ -1,15 +1,30 @@
 #include <stm32f1xx.h>
 
-#define MODE_OUT_2 0x02 /* Output, 2 Mhz */
-
-#define CONF_GP_UD 0x0 /* Pull up/down */
-#define CONF_GP_OD 0x4 /* Open drain */
+#define DELAY(cycles) for (int i = 0; i < cycles; i++)
 
 void delay(void) {
   volatile int count = 1000 * 200;
 
   while (count--)
     ;
+}
+
+void bitbang(uint8_t value) {
+  GPIOB->ODR = 0;
+  DELAY(20);
+
+  for (uint8_t bit = 0x80; bit != 0; bit >>= 1) {
+    if ((value & bit) == 0) {
+      GPIOB->ODR = 0;
+    } else {
+      GPIOB->ODR = 1 << 5;
+    }
+
+    DELAY(4);
+  }
+
+  GPIOB->ODR = 0;
+  DELAY(20);
 }
 
 void startup(void) {
@@ -28,5 +43,7 @@ void startup(void) {
     __asm__ ( "nop");
     __asm__ ( "nop");
     __asm__ ( "nop");
+
+    // bitbang(0x77);
   }
 }
