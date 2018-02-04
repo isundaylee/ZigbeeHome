@@ -12,5 +12,7 @@ public:
   void init();
 
   void write(uint8_t data);
+  void write(uint32_t data);
+  void write(const char* string);
   int read();
 };

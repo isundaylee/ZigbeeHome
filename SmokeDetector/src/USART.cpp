@@ -27,6 +27,19 @@ void USART::write(uint8_t data) {
   usart_->DR = data;
 }
 
+void USART::write(uint32_t data) {
+  this->write((uint8_t)((data & 0xFF000000) >> 24));
+  this->write((uint8_t)((data & 0x00FF0000) >> 16));
+  this->write((uint8_t)((data & 0x0000FF00) >> 8));
+  this->write((uint8_t)((data & 0x000000FF) >> 0));
+}
+
+void USART::write(const char *string) {
+  for (const char *c = string; (*c) != 0; c++) {
+    this->write((uint8_t) *c);
+  }
+}
+
 int USART::read() {
   if ((usart_->SR & USART_SR_RXNE) != 0) {
     return (uint8_t)usart_->DR;

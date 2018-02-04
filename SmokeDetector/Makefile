@@ -18,7 +18,7 @@ SRCDIR		= src
 
 NAME		= SmokeDetector
 
-CPPOBJS 	= $(BUILDDIR)/$(NAME).o $(BUILDDIR)/USART.o
+CPPOBJS 	= $(BUILDDIR)/$(NAME).o $(BUILDDIR)/USART.o $(BUILDDIR)/SPI.o
 OBJS 		= $(CPPOBJS) $(BUILDDIR)/Boot.o
 
 all: $(BUILDDIR)/$(NAME).bin
