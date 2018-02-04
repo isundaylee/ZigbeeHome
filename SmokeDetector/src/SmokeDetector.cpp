@@ -12,10 +12,17 @@ extern "C" void startup(void) {
   u.init();
 
   for (;;) {
-    u.write(0xAB);
-    u.write(0xCD);
-    u.write(0xEF);
-
-    DELAY(1000);
+    int ch;
+    if ((ch = u.read()) != -1) {
+      u.write((uint8_t)ch);
+    }
+    //   u.write('h');
+    //   u.write('e');
+    //   u.write('l');
+    //   u.write('l');
+    //   u.write('o');
+    //   u.write('!');
+    //
+    //   DELAY(100000);
   }
 }

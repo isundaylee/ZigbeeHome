@@ -12,4 +12,5 @@ public:
   void init();
 
   void write(uint8_t data);
+  int read();
 };

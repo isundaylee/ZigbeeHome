@@ -17,6 +17,7 @@ void USART::init() {
   usart_->CR1 &= ~(USART_CR1_M);
   usart_->BRR = 0x040 + 0x6;
   usart_->CR1 |= USART_CR1_TE;
+  usart_->CR1 |= USART_CR1_RE;
 }
 
 void USART::write(uint8_t data) {
@@ -24,4 +25,12 @@ void USART::write(uint8_t data) {
     ;
 
   usart_->DR = data;
+}
+
+int USART::read() {
+  if ((usart_->SR & USART_SR_RXNE) != 0) {
+    return (uint8_t)usart_->DR;
+  }
+
+  return -1;
 }
