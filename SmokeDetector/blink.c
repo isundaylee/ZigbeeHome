@@ -28,22 +28,22 @@ void bitbang(uint8_t value) {
 }
 
 void startup(void) {
+  RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
   RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
+  RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
+  RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
 
-  GPIOB->CRL |= 0b0101 << 20;
+  GPIOA->CRH |= (0b1001 << 4);
+
+  USART1->CR1 |= USART_CR1_UE;
+  USART1->CR1 &= ~(USART_CR1_M);
+  USART1->BRR = 0x040 + 0x6;
+  USART1->CR1 |= USART_CR1_TE;
 
   for (;;) {
-    GPIOB->BSRR = 1 << 5;
-    __asm__ ( "nop");
-    __asm__ ( "nop");
-    __asm__ ( "nop");
-    __asm__ ( "nop");
-    GPIOB->BSRR = 1 << (5 + 16);
-    __asm__ ( "nop");
-    __asm__ ( "nop");
-    __asm__ ( "nop");
-    __asm__ ( "nop");
+    while ((USART1->SR & USART_SR_TXE) == 0)
+      ;
 
-    // bitbang(0x77);
+    USART1->DR = 0x55;
   }
 }
