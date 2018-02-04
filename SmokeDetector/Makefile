@@ -16,10 +16,12 @@ CFLAGS		+= -DSTM32F103x6
 BUILDDIR 	= build
 SRCDIR		= src
 
-CPPOBJS 	= $(BUILDDIR)/blink.o $(BUILDDIR)/USART.o
+NAME		= SmokeDetector
+
+CPPOBJS 	= $(BUILDDIR)/$(NAME).o $(BUILDDIR)/USART.o
 OBJS 		= $(CPPOBJS) $(BUILDDIR)/locore.o
 
-all: $(BUILDDIR)/blink.bin
+all: $(BUILDDIR)/$(NAME).bin
 
 ################################################################################
 # Compilation stage
@@ -35,24 +37,24 @@ $(BUILDDIR)/locore.o: $(SRCDIR)/locore.s
 # Linking stage
 ################################################################################
 
-$(BUILDDIR)/blink.elf: $(OBJS) $(SRCDIR)/blink.lds
-	$(LD) -T $(SRCDIR)/blink.lds $(OBJS) -o $@
+$(BUILDDIR)/$(NAME).elf: $(OBJS) $(SRCDIR)/$(NAME).lds
+	$(LD) -T $(SRCDIR)/$(NAME).lds $(OBJS) -o $@
 
-$(BUILDDIR)/blink.dump: $(BUILDDIR)/blink.elf
+$(BUILDDIR)/$(NAME).dump: $(BUILDDIR)/$(NAME).elf
 	$(DUMP) $< >$@
 
-$(BUILDDIR)/blink.bin: $(BUILDDIR)/blink.elf
+$(BUILDDIR)/$(NAME).bin: $(BUILDDIR)/$(NAME).elf
 	$(OBJCOPY) $< $@ -O binary
 
 ################################################################################
 # Utility functions
 ################################################################################
 
-flash: $(BUILDDIR)/blink.bin
-	st-flash --reset write $(BUILDDIR)/blink.bin 0x08000000
+flash: $(BUILDDIR)/$(NAME).bin
+	st-flash --reset write $(BUILDDIR)/$(NAME).bin 0x08000000
 
 gdb:
-	$(GDB) --eval-command="target remote localhost:3333" blink.elf
+	$(GDB) --eval-command="target remote localhost:3333" $(NAME).elf
 
 clean:
 	rm -f $(BUILDDIR)/*
