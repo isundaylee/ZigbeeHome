@@ -9,7 +9,7 @@ void setupClock() {
   while ((RCC->CR & RCC_CR_HSIRDY) == 0)
     ;
 
-  RCC->CFGR |= (0b0111 << 18);
+  RCC->CFGR |= (0b0110 << 18);
   RCC->CR |= RCC_CR_PLLON;
   RCC->CFGR |= 0b10;
 }
@@ -24,13 +24,20 @@ extern "C" void startup(void) {
   s.init();
   s.setupSlaveSelect(GPIOA, 2);
 
+  USART u(USART1);
+  u.init();
+
+  u.write("Hello!");
+
   for (int count = 0;; count++) {
     uint8_t buf[] = {0b1101, 0b0, 0b0};
 
     s.transfer(GPIOA, 2, buf, 3);
 
-    uint16_t value = (((uint16_t)buf[1]) << 3) + (buf[2] & 0b111);
+    uint16_t value = (((uint16_t)buf[1]) << 3) + ((buf[2] & 0b11100000) >> 5);
     uint8_t v = (value >> 2);
+
+    u.write(v);
 
     DELAY(100000);
   }

@@ -15,7 +15,7 @@ void USART::init() {
 
   usart_->CR1 |= USART_CR1_UE;
   usart_->CR1 &= ~(USART_CR1_M);
-  usart_->BRR = 0x040 + 0x6;
+  usart_->BRR = 0x110 + 0x8;
   usart_->CR1 |= USART_CR1_TE;
   usart_->CR1 |= USART_CR1_RE;
 }
