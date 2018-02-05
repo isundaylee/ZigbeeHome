@@ -19,7 +19,7 @@ void SPI::init() {
   }
 
   SPI1->CR1 &= ~(0b111 << 3);
-  SPI1->CR1 |= (0b010 << 3);
+  SPI1->CR1 |= (0b100 << 3);
   SPI1->CR2 |= SPI_CR1_SSI;
   SPI1->CR2 |= SPI_CR1_SSM;
   SPI1->CR1 |= SPI_CR1_MSTR;
