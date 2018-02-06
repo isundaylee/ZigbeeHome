@@ -15,17 +15,14 @@ void setupClock() {
 }
 
 extern "C" void startup(void) {
-  RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
-  RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
-
   setupClock();
+
+  USART u(USART1);
+  u.init();
 
   SPI s(SPI1);
   s.init();
   s.setupSlaveSelect(GPIOA, 2);
-
-  USART u(USART1);
-  u.init();
 
   u.write("Hello!");
 
@@ -37,7 +34,7 @@ extern "C" void startup(void) {
     uint16_t value = (((uint16_t)buf[1]) << 3) + ((buf[2] & 0b11100000) >> 5);
     uint8_t v = (value >> 2);
 
-    u.write(v);
+    u.write(buf[1]);
 
     DELAY(100000);
   }
