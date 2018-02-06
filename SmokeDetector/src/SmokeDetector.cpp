@@ -33,9 +33,5 @@ extern "C" void startup(void) {
 
     uint16_t value = (((uint16_t)buf[1]) << 3) + ((buf[2] & 0b11100000) >> 5);
     uint8_t v = (value >> 2);
-
-    u.write(buf[1]);
-
-    DELAY(100000);
   }
 }
