@@ -6,25 +6,32 @@ extern "C" void __aeabi_unwind_cpp_pr1(void) {}
 USART::USART(USART_TypeDef *usart) : usart_(usart) {}
 
 void USART::init() {
-  if (usart_ == USART1) {
-    RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
+  if (usart_ == USART2) {
+    RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
-    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
-    GPIOA->CRH |= (0b1001 << 4);
+    RCC->IOPENR |= RCC_IOPENR_IOPAEN;
+
+    GPIOA->MODER &= ~(0b11 << 18);
+    GPIOA->MODER |= (0b10 << 18);
+    GPIOA->AFR[1] |= (0b0100 << 4);
+
+    GPIOA->MODER &= ~(0b11 << 20);
+    GPIOA->MODER |= (0b10 << 20);
+    GPIOA->AFR[1] |= (0b0100 << 8);
   }
 
-  usart_->CR1 |= USART_CR1_UE;
   usart_->CR1 &= ~(USART_CR1_M);
-  usart_->BRR = 0x110 + 0x8;
+  usart_->BRR = 2100000 / 115200;
+  usart_->CR1 |= USART_CR1_UE;
   usart_->CR1 |= USART_CR1_TE;
   usart_->CR1 |= USART_CR1_RE;
 }
 
 void USART::write(uint8_t data) {
-  while ((usart_->SR & USART_SR_TXE) == 0)
+  while ((usart_->ISR & USART_ISR_TXE) == 0)
     ;
 
-  usart_->DR = data;
+  usart_->TDR = data;
 }
 
 void USART::write(uint32_t data) {
@@ -36,13 +43,13 @@ void USART::write(uint32_t data) {
 
 void USART::write(const char *string) {
   for (const char *c = string; (*c) != 0; c++) {
-    this->write((uint8_t) *c);
+    this->write((uint8_t)*c);
   }
 }
 
 int USART::read() {
-  if ((usart_->SR & USART_SR_RXNE) != 0) {
-    return (uint8_t)usart_->DR;
+  if ((usart_->ISR & USART_ISR_RXNE) != 0) {
+    return (uint8_t)usart_->RDR;
   }
 
   return -1;

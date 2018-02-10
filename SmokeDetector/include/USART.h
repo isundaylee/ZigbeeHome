@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stm32f1xx.h>
+#include <stm32l0xx.h>
 
 class USART {
 private:

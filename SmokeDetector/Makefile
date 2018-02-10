@@ -7,12 +7,12 @@ OBJCOPY 	= $(TOOLS)-objcopy
 DUMP 		= $(TOOLS)-objdump -d
 GDB 		= $(TOOLS)-gdb
 
-CFLAGS 		= -mcpu=cortex-m3 -mthumb -g
+CFLAGS 		= -mcpu=cortex-m0 -mthumb -g
 CFLAGS 		+= -I./include
 CFLAGS 		+= -I./lib/CMSIS/Include
 CFLAGS 		+= -I./lib/CMSIS/Device/ST/STM32F1xx/Include
 CFLAGS 		+= -I./lib/CMSIS/Device/ST/STM32L0xx/Include
-CFLAGS		+= -DSTM32F103x6
+CFLAGS		+= -DSTM32L011xx
 
 BUILDDIR 	= build
 SRCDIR		= src
