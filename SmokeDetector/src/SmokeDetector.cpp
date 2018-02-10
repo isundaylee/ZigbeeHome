@@ -1,3 +1,5 @@
+#include <stm32l011xx.h>
+
 #define DELAY(iterations) for (int i = 0; i < iterations; i++)
 
 void setupClock() {
