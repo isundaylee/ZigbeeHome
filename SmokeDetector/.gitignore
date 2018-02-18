@@ -2,3 +2,4 @@
 *.elf
 *.bin
 *.dump
+compile_commands.json
