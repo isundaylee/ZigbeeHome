@@ -3,12 +3,19 @@ import time
 import numpy
 import threading
 import datetime
+import sys
 
 def log(msg):
     print('[%s] %s' % (datetime.datetime.now(), msg))
 
 def bytes_to_string(bs):
     return ' '.join(map(lambda b: '%02x' % b, bs))
+
+def calculate_checksum(bs):
+    checksum = 0
+    for b in bs:
+        checksum ^= b
+    return checksum
 
 def check_checksum(length, cmd, data, checksum):
     checksum ^= length
@@ -52,14 +59,28 @@ class ListeningThread(threading.Thread):
             log('Received command (%s %s): payload = %s' %
                 (cmd_type, bytes_to_string(cmd), bytes_to_string(data)))
 
-with serial.Serial('/dev/cu.wchusbserial401220', 115200) as s:
+if sys.argv[1] == 'master':
+    DEV = '/dev/cu.wchusbserial401220'
+elif sys.argv[1] == 'slave':
+    DEV = '/dev/cu.usbserial-A9M9DV3R'
+else:
+    raise RuntimeError("Invalid device given.")
+
+with serial.Serial(DEV, 115200) as s:
     time.sleep(1)
 
     listener = ListeningThread(s)
     listener.start()
 
-    while True:
-        s.write(b'\xFE\x00\x21\x01\x20')
-        time.sleep(0.01)
+    for line in sys.stdin:
+        tokens = line.split()
+        tokens = filter(lambda x: len(x) == 2, tokens)
+        bs = bytes(map(lambda x: int(x, 16), tokens))
+        length = len(bs) - 2
+
+        s.write(bytes([0xFE]))
+        s.write(bytes([length]))
+        s.write(bs)
+        s.write(bytes([calculate_checksum(bytes([length]) + bs)]))
 
     listener.join()
