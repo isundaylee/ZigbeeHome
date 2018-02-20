@@ -44,20 +44,20 @@ void notmain(void) {
   }
 }
 
-extern uint32_t _sbss;
-extern uint32_t _ebss;
+extern uint32_t __bss_start__;
+extern uint32_t __bss_end__;
 
 extern "C" void startup(void) {
   // Zero the BSS section
-  for (uint32_t *p = &_sbss; p != &_ebss; p++) {
+  for (uint32_t *p = &__bss_start__; p != &__bss_end__; p++) {
     *p = 0;
   }
 
   // Calling global initializers
-  extern void (*_init_array_start)();
-  extern void (*_init_array_end)();
+  extern void (*__init_array_start__)();
+  extern void (*__init_array_end__)();
 
-  for (void (**p)() = &_init_array_start; p < &_init_array_end; p++) {
+  for (void (**p)() = &__init_array_start__; p < &__init_array_end__; p++) {
     (*p)();
   }
 

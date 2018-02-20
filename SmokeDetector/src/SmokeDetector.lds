@@ -29,17 +29,17 @@ SECTIONS
     .bss :
     {
         . = ALIGN(4);
-        _sbss = .;
+        __bss_start__ = .;
         * (.bss)
         . = ALIGN(4);
-        _ebss = .;
+        __bss_end__ = .;
     } > sram
 
     .init_array :
     {
-        _init_array_start = .;
+        __init_array_start__ = .;
         KEEP(*(SORT(.init_array.*)))
         KEEP(*(.init_array))
-        _init_array_end = .;
+        __init_array_end__ = .;
     } > flash
 }
