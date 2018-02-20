@@ -3,31 +3,74 @@
  * Tom Trebisky  9-24-2016
  */
 
-# The Cortex M3 is a thumb only processor
-.cpu cortex-m3
+.cpu cortex-m0
 .thumb
 
-.word   0x20000800  /* stack top address */
-.word   _reset      /* 1 Reset */
-.word   spin        /* 2 NMI */
-.word   spin        /* 3 Hard Fault */
-.word   spin        /* 4 MM Fault */
-.word   spin        /* 5 Bus Fault */
-.word   spin        /* 6 Usage Fault */
-.word   spin        /* 7 RESERVED */
-.word   spin        /* 8 RESERVED */
-.word   spin        /* 9 RESERVED*/
-.word   spin        /* 10 RESERVED */
-.word   spin        /* 11 SV call */
-.word   spin        /* 12 Debug reserved */
-.word   spin        /* 13 RESERVED */
-.word   spin        /* 14 PendSV */
-.word   spin        /* 15 SysTick */
-.word   spin        /* 16 IRQ0 */
-.word   spin        /* 17 IRQ1 */
-.word   spin        /* 18 IRQ2 */
-.word   spin        /* 19 ...   */
-		            /* On to IRQ67 */
+/* 0x00-C */
+.word   0x20000800
+.word   _reset
+.word   spin
+.word   spin
+
+/* 0x10-C */
+.word   spin
+.word   spin
+.word   spin
+.word   spin
+
+/* 0x20-C */
+.word   spin
+.word   spin
+.word   spin
+.word   spin
+
+/* 0x30-C */
+.word   spin
+.word   spin
+.word   spin
+.word   spin
+
+/* 0x40-C */
+.word   spin
+.word   spin
+.word   spin
+.word   spin
+
+/* 0x50-C */
+.word   spin
+.word   spin
+.word   spin
+.word   spin
+
+/* 0x60-C */
+.word   spin
+.word   spin
+.word   spin
+.word   spin
+
+/* 0x70-C */
+.word   spin
+.word   spin
+.word   spin
+.word   spin
+
+/* 0x80-C */
+.word   spin
+.word   spin
+.word   spin
+.word   spin
+
+/* 0x90-C */
+.word   spin
+.word   spin
+.word   spin
+.word   spin
+
+/* 0xA0-C */
+.word   spin
+.word   spin
+.word   spin
+.word   vector_usart1
 
 spin:   b spin
 

@@ -3,6 +3,10 @@
 extern "C" void __aeabi_unwind_cpp_pr0(void) {}
 extern "C" void __aeabi_unwind_cpp_pr1(void) {}
 
+extern "C" void vector_usart1() {}
+
+USART USART_2(USART2);
+
 USART::USART(USART_TypeDef *usart) : usart_(usart) {}
 
 void USART::init() {

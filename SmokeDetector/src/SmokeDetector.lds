@@ -14,8 +14,8 @@
 
 MEMORY
 {
-    flash(RX)  : ORIGIN = 0x00000000, LENGTH = 128K
     sram(WAIL) : ORIGIN = 0x20000000, LENGTH = 20K
+    flash(RX)  : ORIGIN = 0x00000000, LENGTH = 128K
 }
 
 SECTIONS
@@ -28,6 +28,18 @@ SECTIONS
 
     .bss :
     {
+        . = ALIGN(4);
+        _sbss = .;
         * (.bss)
+        . = ALIGN(4);
+        _ebss = .;
     } > sram
+
+    .init_array :
+    {
+        _init_array_start = .;
+        KEEP(*(SORT(.init_array.*)))
+        KEEP(*(.init_array))
+        _init_array_end = .;
+    } > flash
 }

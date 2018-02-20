@@ -16,3 +16,5 @@ public:
   void write(const char* string);
   int read();
 };
+
+extern USART USART_2;

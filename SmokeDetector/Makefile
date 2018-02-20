@@ -54,8 +54,8 @@ $(BUILDDIR)/$(NAME).bin: $(BUILDDIR)/$(NAME).elf
 flash: $(BUILDDIR)/$(NAME).bin
 	st-flash write $(BUILDDIR)/$(NAME).bin 0x08000000
 
-gdb:
-	$(GDB) --eval-command="target remote localhost:3333" $(NAME).elf
+gdb: $(BUILDDIR)/$(NAME).elf
+	$(GDB) --eval-command="target remote localhost:3333" $(BUILDDIR)/$(NAME).elf
 
 clean:
 	rm -f $(BUILDDIR)/*
