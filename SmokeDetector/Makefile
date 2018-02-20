@@ -1,18 +1,27 @@
-TOOLS = arm-none-eabi
+GCC_PREFIX  = arm-none-eabi
+LLVM_PREFIX = /usr/local/opt/llvm/bin
 
-AS 			= $(TOOLS)-as
-CC 			= $(TOOLS)-g++
-LD 			= $(TOOLS)-ld.bfd
-OBJCOPY 	= $(TOOLS)-objcopy
-DUMP 		= $(TOOLS)-objdump -d
-GDB 		= $(TOOLS)-gdb
+CC 			= $(LLVM_PREFIX)/clang++
+LD 			= $(GCC_PREFIX)-ld.bfd
+OBJCOPY 	= $(GCC_PREFIX)-objcopy
+DUMP 		= $(GCC_PREFIX)-objdump -d
+GDB 		= $(GCC_PREFIX)-gdb
 
-CFLAGS 		= -mcpu=cortex-m0 -mthumb -g
-CFLAGS 		+= -I./include
-CFLAGS 		+= -I./lib/CMSIS/Include
-CFLAGS 		+= -I./lib/CMSIS/Device/ST/STM32F1xx/Include
-CFLAGS 		+= -I./lib/CMSIS/Device/ST/STM32L0xx/Include
-CFLAGS		+= -DSTM32L011xx
+CC_FLAGS 	= -target arm-none-eabi
+CC_FLAGS	+= -mcpu=cortex-m0
+CC_FLAGS	+= -mthumb
+CC_FLAGS	+= -mfloat-abi=soft
+CC_FLAGS	+= -g
+CC_FLAGS 	+= -nostdlib
+CC_FLAGS 	+= -I./include
+CC_FLAGS 	+= -I./lib/CMSIS/Include
+CC_FLAGS 	+= -I./lib/CMSIS/Device/ST/STM32F1xx/Include
+CC_FLAGS 	+= -I./lib/CMSIS/Device/ST/STM32L0xx/Include
+CC_FLAGS	+= -DSTM32L011xx
+
+CC_FLAGS_AS	= -target arm-none-eabi
+CC_FLAGS_AS	+= -mcpu=cortex-m0
+CC_FLAGS_AS	+= -mfloat-abi=soft
 
 BUILDDIR 	= build
 SRCDIR		= src
@@ -29,10 +38,10 @@ all: $(BUILDDIR)/$(NAME).bin
 ################################################################################
 
 $(CPPOBJS): $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) -c $(CC_FLAGS) $< -o $@
 
 $(BUILDDIR)/Boot.o: $(SRCDIR)/Boot.s
-	$(AS) $< -o $@
+	$(CC) -c $(CC_FLAGS_AS) $< -o $@
 
 ################################################################################
 # Linking stage
