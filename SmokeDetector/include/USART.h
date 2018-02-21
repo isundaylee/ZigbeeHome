@@ -9,7 +9,7 @@ extern "C" void vector_usart2();
 
 template <int usartAddr> class USART {
 private:
-  static RingBuffer<uint8_t, 64> rxBuffer_;
+  static volatile RingBuffer<uint8_t, 64> rxBuffer_;
 
   static USART_TypeDef *usart() { return (USART_TypeDef *)usartAddr; }
 
@@ -65,4 +65,4 @@ public:
 };
 
 typedef USART<USART2_BASE> USART_2;
-template <int usartAddr> RingBuffer<uint8_t, 64> USART<usartAddr>::rxBuffer_;
+template <int usartAddr> volatile RingBuffer<uint8_t, 64> USART<usartAddr>::rxBuffer_;
