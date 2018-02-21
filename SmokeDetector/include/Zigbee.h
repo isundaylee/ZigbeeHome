@@ -53,7 +53,8 @@ public:
   void process() {
     int c;
     while ((c = USART::read()) != -1) {
-      uint8_t byte = (uint8_t)c;
+      uint8_t byte = static_cast<uint8_t>(c);
+
       if (command_.empty()) {
         // We're not in the middle of a command
         if (byte != 0xFE) {

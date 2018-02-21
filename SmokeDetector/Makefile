@@ -12,22 +12,27 @@ CC_FLAGS 	= -target arm-none-eabi
 CC_FLAGS	+= -mcpu=cortex-m0
 CC_FLAGS	+= -mthumb
 CC_FLAGS	+= -mfloat-abi=soft
+
 CC_FLAGS	+= -g
 CC_FLAGS	+= -O3
+CC_FLAGS    += -std=c++17
 CC_FLAGS 	+= -nostdlib
 CC_FLAGS    += -ffreestanding
 CC_FLAGS    += -fno-exceptions
-CC_FLAGS    += -std=c++17
-CC_FLAGS 	+= -Wno-deprecated-register
+
+CC_FLAGS 	+= -Wall
+CC_FLAGS 	+= -Wextra
+CC_FLAGS 	+= -Wold-style-cast
+CC_FLAGS 	+= -Werror
+
 CC_FLAGS 	+= -I./include
-CC_FLAGS 	+= -I./lib/CMSIS/Include
-CC_FLAGS 	+= -I./lib/CMSIS/Device/ST/STM32F1xx/Include
-CC_FLAGS 	+= -I./lib/CMSIS/Device/ST/STM32L0xx/Include
+CC_FLAGS 	+= -isystem ./lib/CMSIS/Include
+CC_FLAGS 	+= -isystem ./lib/CMSIS/Device/ST/STM32F1xx/Include
+CC_FLAGS 	+= -isystem ./lib/CMSIS/Device/ST/STM32L0xx/Include
 CC_FLAGS	+= -DSTM32L011xx
 
 CC_FLAGS_AS	= -target arm-none-eabi
 CC_FLAGS_AS	+= -mcpu=cortex-m0
-CC_FLAGS	+= -mthumb
 CC_FLAGS_AS	+= -mfloat-abi=soft
 
 BUILDDIR 	= build
@@ -62,7 +67,7 @@ $(BUILDDIR)/$(NAME).elf: $(OBJS) $(SRCDIR)/$(NAME).lds
 $(BUILDDIR)/$(NAME).dump: $(BUILDDIR)/$(NAME).elf
 	$(DUMP) $< >$@
 
-$(BUILDDIR)/$(NAME).bin: $(BUILDDIR)/$(NAME).elf
+$(BUILDDIR)/$(NAME).bin: $(BUILDDIR)/$(NAME).elf size
 	$(OBJCOPY) $< $@ -O binary
 
 ################################################################################
@@ -71,10 +76,12 @@ $(BUILDDIR)/$(NAME).bin: $(BUILDDIR)/$(NAME).elf
 
 flash: $(BUILDDIR)/$(NAME).bin
 	st-flash write $(BUILDDIR)/$(NAME).bin 0x08000000
-	$(SIZE) $(BUILDDIR)/$(NAME).elf
 
 gdb: $(BUILDDIR)/$(NAME).elf
 	$(GDB) $(BUILDDIR)/$(NAME).elf
 
 clean:
 	rm -f $(BUILDDIR)/*
+
+size: $(BUILDDIR)/$(NAME).elf
+	$(SIZE) $(BUILDDIR)/$(NAME).elf

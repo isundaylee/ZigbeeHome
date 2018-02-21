@@ -13,7 +13,9 @@ private:
                     (gpioAddr == GPIOC_BASE),
                 "Invalid gpioAddr given.");
 
-  static GPIO_TypeDef *gpio() { return (GPIO_TypeDef *)gpioAddr; }
+  static GPIO_TypeDef *gpio() {
+    return reinterpret_cast<GPIO_TypeDef *>(gpioAddr);
+  }
 
 public:
   static void init() {
@@ -60,5 +62,5 @@ public:
 };
 
 typedef GPIO<GPIOA_BASE> GPIO_A;
-// typedef GPIO<GPIOB_BASE> GPIO_B;
-// typedef GPIO<GPIOC_BASE> GPIO_C;
+typedef GPIO<GPIOB_BASE> GPIO_B;
+typedef GPIO<GPIOC_BASE> GPIO_C;

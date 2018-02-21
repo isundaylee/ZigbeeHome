@@ -20,5 +20,6 @@ void notmain(void) {
 
   while (true) {
     LEDPin::set(bee.isPowered);
+    bee.process();
   }
 }

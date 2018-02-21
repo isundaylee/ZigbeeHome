@@ -14,7 +14,9 @@ private:
 
   static volatile RingBuffer<uint8_t, 64> rxBuffer_;
 
-  static USART_TypeDef *usart() { return (USART_TypeDef *)usartAddr; }
+  static USART_TypeDef *usart() {
+    return reinterpret_cast<USART_TypeDef *>(usartAddr);
+  }
 
 public:
   static void init() {
@@ -45,15 +47,15 @@ public:
   }
 
   static void write(uint32_t data) {
-    write((uint8_t)((data & 0xFF000000) >> 24));
-    write((uint8_t)((data & 0x00FF0000) >> 16));
-    write((uint8_t)((data & 0x0000FF00) >> 8));
-    write((uint8_t)((data & 0x000000FF) >> 0));
+    write(static_cast<uint8_t>((data & 0xFF000000) >> 24));
+    write(static_cast<uint8_t>((data & 0x00FF0000) >> 16));
+    write(static_cast<uint8_t>((data & 0x0000FF00) >> 8));
+    write(static_cast<uint8_t>((data & 0x000000FF) >> 0));
   }
 
   static void write(const char *string) {
     for (const char *c = string; (*c) != 0; c++) {
-      write((uint8_t)*c);
+      write(static_cast<uint8_t>(*c));
     }
   }
 
