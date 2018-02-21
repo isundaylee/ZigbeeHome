@@ -9,6 +9,10 @@ const uint32_t GPIO_MODE_ANALOG = 0b11;
 
 template <uintptr_t gpioAddr> class GPIO {
 private:
+  static_assert((gpioAddr == GPIOA_BASE) || (gpioAddr == GPIOB_BASE) ||
+                    (gpioAddr == GPIOC_BASE),
+                "Invalid gpioAddr given.");
+
   static GPIO_TypeDef *gpio() { return (GPIO_TypeDef *)gpioAddr; }
 
 public:
@@ -21,11 +25,11 @@ public:
 
     inited = true;
 
-    if (gpioAddr == GPIOA_BASE) {
+    if constexpr (gpioAddr == GPIOA_BASE) {
       RCC->IOPENR |= RCC_IOPENR_IOPAEN;
-    } else if (gpioAddr == GPIOB_BASE) {
+    } else if constexpr (gpioAddr == GPIOB_BASE) {
       RCC->IOPENR |= RCC_IOPENR_IOPBEN;
-    } else if (gpioAddr == GPIOC_BASE) {
+    } else if constexpr (gpioAddr == GPIOC_BASE) {
       RCC->IOPENR |= RCC_IOPENR_IOPCEN;
     }
   }
@@ -56,5 +60,5 @@ public:
 };
 
 typedef GPIO<GPIOA_BASE> GPIO_A;
-typedef GPIO<GPIOB_BASE> GPIO_B;
-typedef GPIO<GPIOC_BASE> GPIO_C;
+// typedef GPIO<GPIOB_BASE> GPIO_B;
+// typedef GPIO<GPIOC_BASE> GPIO_C;

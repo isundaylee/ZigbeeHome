@@ -8,8 +8,10 @@
 
 extern "C" void vector_usart2();
 
-template <int usartAddr> class USART {
+template <uintptr_t usartAddr> class USART {
 private:
+  static_assert(usartAddr == USART2_BASE, "Invalid usartAddr given");
+
   static volatile RingBuffer<uint8_t, 64> rxBuffer_;
 
   static USART_TypeDef *usart() { return (USART_TypeDef *)usartAddr; }
@@ -70,6 +72,7 @@ public:
   friend void vector_usart2();
 };
 
-typedef USART<USART2_BASE> USART_2;
-template <int usartAddr>
+template <uintptr_t usartAddr>
 volatile RingBuffer<uint8_t, 64> USART<usartAddr>::rxBuffer_;
+
+typedef USART<USART2_BASE> USART_2;
