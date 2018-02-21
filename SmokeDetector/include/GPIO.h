@@ -32,6 +32,8 @@ public:
 
   template <int pin> class Pin {
   public:
+    typedef GPIO<gpioAddr> GPIO;
+
     static void setMode(uint32_t mode, uint32_t alternate = 0) {
       gpio()->MODER &= ~(0b11 << (2 * pin));
       gpio()->MODER |= (mode << (2 * pin));
@@ -41,6 +43,15 @@ public:
 
     static void set() { gpio()->BSRR = (1UL << pin); }
     static void clear() { gpio()->BSRR = (1UL << (pin + 16)); }
+    static void toggle() { gpio()->ODR ^= (1UL << pin); }
+
+    static void set(bool value) {
+      if (value) {
+        set();
+      } else {
+        clear();
+      }
+    }
   };
 };
 

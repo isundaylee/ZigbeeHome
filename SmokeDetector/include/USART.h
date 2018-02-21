@@ -3,8 +3,8 @@
 #include <stm32l0xx.h>
 
 #include "GPIO.h"
-#include "RingBuffer.h"
 #include "Interrupt.h"
+#include "RingBuffer.h"
 
 extern "C" void vector_usart2();
 
@@ -21,7 +21,7 @@ public:
 
       GPIO_A::init();
       GPIO_A::Pin<9>::setMode(GPIO_MODE_ALTERNATE, 0b0100);
-      GPIO_A::Pin<9>::setMode(GPIO_MODE_ALTERNATE, 0b0100);
+      GPIO_A::Pin<10>::setMode(GPIO_MODE_ALTERNATE, 0b0100);
     }
 
     usart()->CR1 &= ~(USART_CR1_M);
@@ -55,6 +55,8 @@ public:
     }
   }
 
+  static void flush() { rxBuffer_.clear(); }
+
   static int read() {
     uint8_t data;
 
@@ -69,4 +71,5 @@ public:
 };
 
 typedef USART<USART2_BASE> USART_2;
-template <int usartAddr> volatile RingBuffer<uint8_t, 64> USART<usartAddr>::rxBuffer_;
+template <int usartAddr>
+volatile RingBuffer<uint8_t, 64> USART<usartAddr>::rxBuffer_;

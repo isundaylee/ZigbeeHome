@@ -1,36 +1,44 @@
 #pragma once
 
-template <typename T, int size> class RingBuffer {
+template <typename T, int bufferSize> class RingBuffer {
 private:
-  T data_[size];
-  int head;
-  int tail;
+  T data_[bufferSize];
+  int head_;
+  int tail_;
 
 public:
-  RingBuffer() : head(0), tail(0) {}
+  RingBuffer() : head_(0), tail_(0) {}
 
   RingBuffer(RingBuffer &&move) = delete;
   RingBuffer(RingBuffer const &copy) = delete;
 
   bool push(T value) volatile {
-    if ((tail + 1) % size == head) {
+    if ((tail_ + 1) % bufferSize == head_) {
       // We're full
       return false;
     }
 
-    data_[tail] = value;
-    tail = (tail + 1) % size;
+    data_[tail_] = value;
+    tail_ = (tail_ + 1) % bufferSize;
     return true;
   }
 
   bool pop(T &output) volatile {
-    if (head == tail) {
+    if (head_ == tail_) {
       // We're empty
       return false;
     }
 
-    output = data_[head];
-    head = (head + 1) % size;
+    output = data_[head_];
+    head_ = (head_ + 1) % bufferSize;
     return true;
   }
+
+  void clear() volatile { head_ = tail_ = 0; }
+
+  int size() volatile { return (tail_ + bufferSize - head_) % bufferSize; }
+
+  bool empty() volatile { return head_ == tail_; }
+
+  T operator[](int index) volatile { return data_[head_ + index % bufferSize]; }
 };
