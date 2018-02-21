@@ -34,6 +34,7 @@ SECTIONS
         KEEP(*(SORT(.bss.*)))
         KEEP(*(.bss))
         . = ALIGN(4);
+        . += 4;
         __bss_end__ = .;
     } > sram
 
@@ -45,6 +46,7 @@ SECTIONS
         KEEP(*(SORT(.data.*)))
         KEEP(*(.data))
         . = ALIGN(4);
+        . += 4;
         __data_end__ = .;
     } > sram AT > flash
 
@@ -54,5 +56,6 @@ SECTIONS
         KEEP(*(SORT(.init_array.*)))
         KEEP(*(.init_array))
         __init_array_end__ = .;
+        . += 4;
     } > flash
 }

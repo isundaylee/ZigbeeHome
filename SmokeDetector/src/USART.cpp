@@ -1,59 +1,7 @@
 #include "USART.h"
-#include "GPIO.h"
 
 extern "C" void vector_usart2() {
-  while (USART_2.usart_->ISR & USART_ISR_RXNE) {
-    USART_2.rxBuffer_.push((uint8_t)USART_2.usart_->RDR);
+  while (USART_2::usart()->ISR & USART_ISR_RXNE) {
+    USART_2::rxBuffer_.push((uint8_t)USART_2::usart()->RDR);
   }
-}
-
-USART USART_2(USART2);
-
-USART::USART(USART_TypeDef *usart) : usart_(usart) {}
-
-void USART::init() {
-  if (usart_ == USART2) {
-    RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
-
-    GPIO_A::init();
-    GPIO_A::setMode(9, GPIO_MODE_ALTERNATE, 0b0100);
-    GPIO_A::setMode(10, GPIO_MODE_ALTERNATE, 0b0100);
-  }
-
-  usart_->CR1 &= ~(USART_CR1_M);
-  usart_->BRR = 2100000 / 115200;
-  usart_->CR1 |= USART_CR1_RXNEIE;
-  usart_->CR1 |= USART_CR1_UE;
-  usart_->CR1 |= USART_CR1_TE;
-  usart_->CR1 |= USART_CR1_RE;
-}
-
-void USART::write(uint8_t data) {
-  while ((usart_->ISR & USART_ISR_TXE) == 0)
-    ;
-
-  usart_->TDR = data;
-}
-
-void USART::write(uint32_t data) {
-  this->write((uint8_t)((data & 0xFF000000) >> 24));
-  this->write((uint8_t)((data & 0x00FF0000) >> 16));
-  this->write((uint8_t)((data & 0x0000FF00) >> 8));
-  this->write((uint8_t)((data & 0x000000FF) >> 0));
-}
-
-void USART::write(const char *string) {
-  for (const char *c = string; (*c) != 0; c++) {
-    this->write((uint8_t)*c);
-  }
-}
-
-int USART::read() {
-  uint8_t data;
-
-  if (rxBuffer_.pop(data)) {
-    return data;
-  }
-
-  return -1;
 }

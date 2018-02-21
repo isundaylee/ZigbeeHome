@@ -12,7 +12,7 @@ public:
   RingBuffer(RingBuffer &&move) = delete;
   RingBuffer(RingBuffer const &copy) = delete;
 
-  bool push(T value) {
+  bool push(T value) volatile {
     if ((tail + 1) % size == head) {
       // We're full
       return false;
@@ -23,7 +23,7 @@ public:
     return true;
   }
 
-  bool pop(T &output) {
+  bool pop(T &output) volatile {
     if (head == tail) {
       // We're empty
       return false;

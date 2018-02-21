@@ -12,25 +12,25 @@ void notmain(void) {
   Interrupt::enable();
   Interrupt::enableIRQ(USART2_IRQn);
 
-  USART_2.init();
-  USART_2.write("Hello, world!");
+  USART_2::init();
+  USART_2::write("Hello, world!");
 
   GPIO_A::init();
   GPIO_A::setMode(4, GPIO_MODE_OUTPUT);
 
   while (true) {
     int c;
-    while ((c = USART_2.read()) != -1) {
-      USART_2.write((uint8_t)c);
+    while ((c = USART_2::read()) != -1) {
+      USART_2::write((uint8_t)c);
     }
   }
 }
 
-extern uint32_t __bss_start__;
-extern uint32_t __bss_end__;
-extern uint8_t __data_start__;
-extern uint8_t __data_start_load__;
-extern uint8_t __data_end__;
+extern uint32_t __attribute__((may_alias)) __bss_start__;
+extern uint32_t __attribute__((may_alias)) __bss_end__;
+extern uint8_t __attribute__((may_alias)) __data_start__;
+extern uint8_t __attribute__((may_alias)) __data_start_load__;
+extern uint8_t __attribute__((may_alias)) __data_end__;
 
 extern "C" void startup(void) {
   // Zero the BSS section
