@@ -6,13 +6,16 @@ LD 			= $(GCC_PREFIX)-ld.bfd
 OBJCOPY 	= $(GCC_PREFIX)-objcopy
 DUMP 		= $(GCC_PREFIX)-objdump -d
 GDB 		= $(GCC_PREFIX)-gdb
+SIZE 		= $(GCC_PREFIX)-size
 
 CC_FLAGS 	= -target arm-none-eabi
 CC_FLAGS	+= -mcpu=cortex-m0
 CC_FLAGS	+= -mthumb
 CC_FLAGS	+= -mfloat-abi=soft
 CC_FLAGS	+= -g
+CC_FLAGS	+= -O3
 CC_FLAGS 	+= -nostdlib
+CC_FLAGS    += -ffreestanding
 CC_FLAGS 	+= -I./include
 CC_FLAGS 	+= -I./lib/CMSIS/Include
 CC_FLAGS 	+= -I./lib/CMSIS/Device/ST/STM32F1xx/Include
@@ -65,6 +68,7 @@ $(BUILDDIR)/$(NAME).bin: $(BUILDDIR)/$(NAME).elf
 
 flash: $(BUILDDIR)/$(NAME).bin
 	st-flash write $(BUILDDIR)/$(NAME).bin 0x08000000
+	$(SIZE) $(BUILDDIR)/$(NAME).elf
 
 gdb: $(BUILDDIR)/$(NAME).elf
 	$(GDB) $(BUILDDIR)/$(NAME).elf

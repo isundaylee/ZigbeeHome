@@ -1,7 +1,5 @@
 #include "USART.h"
-
-extern "C" void __aeabi_unwind_cpp_pr0(void) {}
-extern "C" void __aeabi_unwind_cpp_pr1(void) {}
+#include "GPIO.h"
 
 extern "C" void vector_usart2() {
   while (USART_2.usart_->ISR & USART_ISR_RXNE) {
@@ -17,15 +15,9 @@ void USART::init() {
   if (usart_ == USART2) {
     RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
-    RCC->IOPENR |= RCC_IOPENR_IOPAEN;
-
-    GPIOA->MODER &= ~(0b11 << 18);
-    GPIOA->MODER |= (0b10 << 18);
-    GPIOA->AFR[1] |= (0b0100 << 4);
-
-    GPIOA->MODER &= ~(0b11 << 20);
-    GPIOA->MODER |= (0b10 << 20);
-    GPIOA->AFR[1] |= (0b0100 << 8);
+    GPIO_A::init();
+    GPIO_A::setMode(9, GPIO_MODE_ALTERNATE, 0b0100);
+    GPIO_A::setMode(10, GPIO_MODE_ALTERNATE, 0b0100);
   }
 
   usart_->CR1 &= ~(USART_CR1_M);
@@ -64,10 +56,4 @@ int USART::read() {
   }
 
   return -1;
-
-  // if ((usart_->ISR & USART_ISR_RXNE) != 0) {
-  //   return (uint8_t)usart_->RDR;
-  // }
-  //
-  // return -1;
 }

@@ -24,16 +24,29 @@ SECTIONS
     {
         build/Boot.o (.text)
         * (.text)
+        * (.rodata)
     } > flash
 
     .bss :
     {
         . = ALIGN(4);
         __bss_start__ = .;
-        * (.bss)
+        KEEP(*(SORT(.bss.*)))
+        KEEP(*(.bss))
         . = ALIGN(4);
         __bss_end__ = .;
     } > sram
+
+    .data :
+    {
+        . = ALIGN(4);
+        __data_start_load__ = LOADADDR(.data);
+        __data_start__ = .;
+        KEEP(*(SORT(.data.*)))
+        KEEP(*(.data))
+        . = ALIGN(4);
+        __data_end__ = .;
+    } > sram AT > flash
 
     .init_array :
     {
