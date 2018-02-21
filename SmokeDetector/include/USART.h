@@ -20,8 +20,8 @@ public:
       RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
       GPIO_A::init();
-      GPIO_A::setMode(9, GPIO_MODE_ALTERNATE, 0b0100);
-      GPIO_A::setMode(10, GPIO_MODE_ALTERNATE, 0b0100);
+      GPIO_A::Pin<9>::setMode(GPIO_MODE_ALTERNATE, 0b0100);
+      GPIO_A::Pin<9>::setMode(GPIO_MODE_ALTERNATE, 0b0100);
     }
 
     usart()->CR1 &= ~(USART_CR1_M);

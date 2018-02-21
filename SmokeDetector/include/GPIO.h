@@ -30,15 +30,18 @@ public:
     }
   }
 
-  static void setMode(int pin, uint32_t mode, uint32_t alternate = 0) {
-    gpio()->MODER &= ~(0b11 << (2 * pin));
-    gpio()->MODER |= (mode << (2 * pin));
-    gpio()->AFR[pin / 8] &= ~(0b1111 << (4 * (pin % 8)));
-    gpio()->AFR[pin / 8] |= (alternate << (4 * (pin % 8)));
-  }
+  template <int pin> class Pin {
+  public:
+    static void setMode(uint32_t mode, uint32_t alternate = 0) {
+      gpio()->MODER &= ~(0b11 << (2 * pin));
+      gpio()->MODER |= (mode << (2 * pin));
+      gpio()->AFR[pin / 8] &= ~(0b1111 << (4 * (pin % 8)));
+      gpio()->AFR[pin / 8] |= (alternate << (4 * (pin % 8)));
+    }
 
-  static void set(int pin) { gpio()->BSRR = (1UL << pin); }
-  static void clear(int pin) { gpio()->BSRR = (1UL << (pin + 16)); }
+    static void set() { gpio()->BSRR = (1UL << pin); }
+    static void clear() { gpio()->BSRR = (1UL << (pin + 16)); }
+  };
 };
 
 typedef GPIO<GPIOA_BASE> GPIO_A;

@@ -12,7 +12,10 @@ void notmain(void) {
   USART_2::write("Hello, world!");
 
   GPIO_A::init();
-  GPIO_A::setMode(4, GPIO_MODE_OUTPUT);
+  GPIO_A::Pin<1>::setMode(GPIO_MODE_OUTPUT);
+  GPIO_A::Pin<4>::setMode(GPIO_MODE_OUTPUT);
+
+  GPIO_A::Pin<1>::set();
 
   while (true) {
     int c;
