@@ -1,6 +1,7 @@
 #include <stm32l011xx.h>
 
 #include "USART.h"
+#include "Interrupt.h"
 
 #define DELAY(iterations) for (int i = 0; i < iterations; i++)
 
@@ -28,6 +29,9 @@ void notmain(void) {
   // }
 
   GPIOA->MODER |= (0b01 << 8);
+
+  Interrupt::enable();
+  Interrupt::enableIRQ(USART2_IRQn);
 
   USART_2.init();
   USART_2.write("Hello, world!");

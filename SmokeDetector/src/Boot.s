@@ -10,7 +10,7 @@
 .word   0x20000800
 .word   _reset
 .word   spin
-.word   spin
+.word   spin2
 
 /* 0x10-C */
 .word   spin
@@ -70,9 +70,19 @@
 .word   spin
 .word   spin
 .word   spin
-.word   vector_usart1
+.word   spin
 
+/* 0xB0-C */
+.word   vector_usart2
+.word   spin
+.word   spin
+.word   spin
+
+.thumb_func
 spin:   b spin
+
+.thumb_func
+spin2:  b spin2
 
 .thumb_func
 _reset:

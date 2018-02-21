@@ -21,6 +21,7 @@ CC_FLAGS	+= -DSTM32L011xx
 
 CC_FLAGS_AS	= -target arm-none-eabi
 CC_FLAGS_AS	+= -mcpu=cortex-m0
+CC_FLAGS	+= -mthumb
 CC_FLAGS_AS	+= -mfloat-abi=soft
 
 BUILDDIR 	= build
@@ -28,7 +29,8 @@ SRCDIR		= src
 
 NAME		= SmokeDetector
 
-CPPOBJS 	= $(BUILDDIR)/$(NAME).o $(BUILDDIR)/USART.o
+HEADERS		= $(wildcard include/*.h)
+CPPOBJS 	= $(patsubst $(SRCDIR)/%.cpp, $(BUILDDIR)/%.o, $(wildcard $(SRCDIR)/*.cpp))
 OBJS 		= $(CPPOBJS) $(BUILDDIR)/Boot.o
 
 all: $(BUILDDIR)/$(NAME).bin
@@ -37,7 +39,8 @@ all: $(BUILDDIR)/$(NAME).bin
 # Compilation stage
 ################################################################################
 
-$(CPPOBJS): $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
+$(CPPOBJS): $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp $(HEADERS)
+	# echo $(CPPOBJS)
 	$(CC) -c $(CC_FLAGS) $< -o $@
 
 $(BUILDDIR)/Boot.o: $(SRCDIR)/Boot.s
@@ -64,7 +67,7 @@ flash: $(BUILDDIR)/$(NAME).bin
 	st-flash write $(BUILDDIR)/$(NAME).bin 0x08000000
 
 gdb: $(BUILDDIR)/$(NAME).elf
-	$(GDB) --eval-command="target remote localhost:3333" $(BUILDDIR)/$(NAME).elf
+	$(GDB) $(BUILDDIR)/$(NAME).elf
 
 clean:
 	rm -f $(BUILDDIR)/*

@@ -3,7 +3,11 @@
 extern "C" void __aeabi_unwind_cpp_pr0(void) {}
 extern "C" void __aeabi_unwind_cpp_pr1(void) {}
 
-extern "C" void vector_usart1() {}
+extern "C" void vector_usart2() {
+  while (USART_2.usart_->ISR & USART_ISR_RXNE) {
+    USART_2.rxBuffer_.push((uint8_t)USART_2.usart_->RDR);
+  }
+}
 
 USART USART_2(USART2);
 
@@ -26,6 +30,7 @@ void USART::init() {
 
   usart_->CR1 &= ~(USART_CR1_M);
   usart_->BRR = 2100000 / 115200;
+  usart_->CR1 |= USART_CR1_RXNEIE;
   usart_->CR1 |= USART_CR1_UE;
   usart_->CR1 |= USART_CR1_TE;
   usart_->CR1 |= USART_CR1_RE;
@@ -52,9 +57,17 @@ void USART::write(const char *string) {
 }
 
 int USART::read() {
-  if ((usart_->ISR & USART_ISR_RXNE) != 0) {
-    return (uint8_t)usart_->RDR;
+  uint8_t data;
+
+  if (rxBuffer_.pop(data)) {
+    return data;
   }
 
   return -1;
+
+  // if ((usart_->ISR & USART_ISR_RXNE) != 0) {
+  //   return (uint8_t)usart_->RDR;
+  // }
+  //
+  // return -1;
 }
