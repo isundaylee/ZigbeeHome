@@ -4,6 +4,7 @@
 
 #include "GPIO.h"
 #include "RingBuffer.h"
+#include "Interrupt.h"
 
 extern "C" void vector_usart2();
 
@@ -29,6 +30,9 @@ public:
     usart()->CR1 |= USART_CR1_UE;
     usart()->CR1 |= USART_CR1_TE;
     usart()->CR1 |= USART_CR1_RE;
+
+    Interrupt::enable();
+    Interrupt::enableIRQ(USART2_IRQn);
   }
 
   static void write(uint8_t data) {

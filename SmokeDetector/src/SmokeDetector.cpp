@@ -1,16 +1,12 @@
 #include <stm32l011xx.h>
 
 #include "GPIO.h"
-#include "Interrupt.h"
 #include "USART.h"
 
 void setupClock() {}
 
 void notmain(void) {
   setupClock();
-
-  Interrupt::enable();
-  Interrupt::enableIRQ(USART2_IRQn);
 
   USART_2::init();
   USART_2::write("Hello, world!");
