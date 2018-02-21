@@ -16,6 +16,7 @@ CC_FLAGS	+= -g
 CC_FLAGS	+= -O3
 CC_FLAGS 	+= -nostdlib
 CC_FLAGS    += -ffreestanding
+CC_FLAGS    += -fno-exceptions
 CC_FLAGS 	+= -I./include
 CC_FLAGS 	+= -I./lib/CMSIS/Include
 CC_FLAGS 	+= -I./lib/CMSIS/Device/ST/STM32F1xx/Include
