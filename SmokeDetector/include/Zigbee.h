@@ -8,6 +8,9 @@
 const uint16_t ZIGBEE_CMD_APP_CNF_BDB_COMMISSIONING_NOTIFICATION = 0x4F80;
 const uint16_t ZIGBEE_CMD_APP_CNF_BDB_SET_CHANNEL = 0x2F08;
 const uint16_t ZIGBEE_CMD_APP_CNF_BDB_START_COMMISSIONING = 0x2F05;
+const uint16_t ZIGBEE_CMD_AF_REGISTER = 0x2400;
+const uint16_t ZIGBEE_CMD_AF_DATA_REQUEST = 0x2401;
+const uint16_t ZIGBEE_CMD_AF_DATA_CONFIRM = 0x4480;
 const uint16_t ZIGBEE_CMD_SYS_OSAL_NV_WRITE = 0x2109;
 const uint16_t ZIGBEE_CMD_SYS_RESET_IND = 0x4180;
 const uint16_t ZIGBEE_CMD_ZDO_MGMT_PERMIT_JOIN_RSP = 0x45B6;
@@ -41,7 +44,8 @@ const uint8_t ZIGBEE_ZDO_STATE_NWK_ORPHAN = 0x0A;
 
 const uint16_t ZIGBEE_SYNC_COMMANDS[] = {
     ZIGBEE_CMD_SYS_OSAL_NV_WRITE, ZIGBEE_CMD_APP_CNF_BDB_SET_CHANNEL,
-    ZIGBEE_CMD_APP_CNF_BDB_START_COMMISSIONING};
+    ZIGBEE_CMD_APP_CNF_BDB_START_COMMISSIONING, ZIGBEE_CMD_AF_REGISTER,
+    ZIGBEE_CMD_AF_DATA_REQUEST};
 
 template <typename USART, typename ResetPin> class Zigbee {
 private:
@@ -64,6 +68,8 @@ public:
 
     ResetPin::GPIO::init();
     ResetPin::setMode(GPIO_MODE_OUTPUT);
+
+    reset();
   }
 
   uint8_t calculateFCS() {
@@ -138,6 +144,9 @@ public:
       DebugPrint("[Zigbee] ZDO state changed to ");
       DebugPrint(humanReadableZDOState(zdoState));
       DebugPrint(".\n");
+      break;
+    case ZIGBEE_CMD_AF_DATA_CONFIRM:
+      // TODO: handle data_confirm
       break;
     case ZIGBEE_CMD_ZDO_NODE_DESC_RSP:
     case ZIGBEE_CMD_ZDO_MGMT_PERMIT_JOIN_RSP:
@@ -231,6 +240,60 @@ public:
     uint8_t data[] = {commissioningMode};
     return sendSyncCommand(ZIGBEE_CMD_APP_CNF_BDB_START_COMMISSIONING,
                            sizeof(data), data);
+  }
+
+  bool registerEndpoint(uint8_t endpoint, uint16_t appProfId,
+                        uint16_t appDeviceId, uint8_t appDevVer,
+                        uint8_t numInClusters, uint16_t *inClusters,
+                        uint8_t numOutClusters, uint16_t *outClusters) {
+    uint8_t data[0x49];
+    uint8_t *ptr = data;
+
+    *(ptr++) = endpoint;
+    *(ptr++) = ((appProfId & 0x00FF) >> 0);
+    *(ptr++) = ((appProfId & 0xFF00) >> 8);
+    *(ptr++) = ((appDeviceId & 0x00FF) >> 0);
+    *(ptr++) = ((appDeviceId & 0xFF00) >> 8);
+    *(ptr++) = appDeviceId;
+    *(ptr++) = 0;
+
+    *(ptr++) = numInClusters;
+    for (uint8_t i = 0; i < numInClusters; i++) {
+      *(ptr++) = ((inClusters[i] & 0x00FF) >> 0);
+      *(ptr++) = ((inClusters[i] & 0xFF00) >> 8);
+    }
+
+    *(ptr++) = numOutClusters;
+    for (uint8_t i = 0; i < numOutClusters; i++) {
+      *(ptr++) = ((outClusters[i] & 0x00FF) >> 0);
+      *(ptr++) = ((outClusters[i] & 0xFF00) >> 8);
+    }
+
+    return sendSyncCommand(ZIGBEE_CMD_AF_REGISTER, ptr - data, data);
+  }
+
+  bool dataRequest(uint16_t dstAddr, uint8_t dstEndpoint, uint8_t srcEndpoint,
+                   uint16_t clusterId, uint8_t transId, uint8_t options,
+                   uint8_t radius, uint8_t dataLen, uint8_t *msgData) {
+    uint8_t data[0x8A];
+    uint8_t *ptr = data;
+
+    *(ptr++) = ((dstAddr & 0x00FF) >> 0);
+    *(ptr++) = ((dstAddr & 0xFF00) >> 8);
+    *(ptr++) = dstEndpoint;
+    *(ptr++) = srcEndpoint;
+    *(ptr++) = ((clusterId & 0x00FF) >> 0);
+    *(ptr++) = ((clusterId & 0xFF00) >> 8);
+    *(ptr++) = transId;
+    *(ptr++) = options;
+    *(ptr++) = radius;
+    *(ptr++) = dataLen;
+
+    for (uint8_t i = 0; i < dataLen; i++) {
+      *(ptr++) = msgData[i];
+    }
+
+    return sendSyncCommand(ZIGBEE_CMD_AF_DATA_REQUEST, ptr - data, data);
   }
 
   void reset() {

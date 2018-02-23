@@ -113,7 +113,8 @@ with serial.Serial(DEV, 115200) as s:
             time.sleep(1)
 
             log('Registering...')
-            send_command(s, b'\x24\x00\x01\x04\x01\x00\x01\x00\x00\x02\x00\x00\x06\x00\x00\x00\x06\x00')
+            # send_command(s, b'\x24\x00\x01\x04\x01\x00\x01\x00\x00\x02\x00\x00\x06\x00\x00\x00\x06\x00')
+            send_command(s, b'\x24\x00\x01\x04\x01\x00\x01\x00\x00\x02\x00\x00\x06\x00\x02\x00\x00\x06\x00')
         elif sys.argv[2] == 'router':
             log('Setting reset bit and restarting...')
             send_command(s, b'\x21\x09\x03\x00\x00\x01\x03')
@@ -134,7 +135,7 @@ with serial.Serial(DEV, 115200) as s:
             time.sleep(5)
 
             log('Registering...')
-            send_command(s, b'\x24\x00\x01\x04\x01\x00\x01\x00\x00\x02\x00\x00\x06\x00\x00\x00\x06\x00')
+            send_command(s, b'\x24\x00\x01\x04\x01\x00\x01\x00\x00\x02\x00\x00\x06\x00\x02\x00\x00\x06\x00')
         else:
             raise RuntimeError("Invalid startup sequence.")
 
