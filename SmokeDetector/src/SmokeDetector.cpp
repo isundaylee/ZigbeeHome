@@ -6,11 +6,11 @@
 #include "Zigbee.h"
 
 void setupClock() {
-  Clock::setClockOut(RCC_CFGR_MCOSEL_SYSCLK);
-  GPIO_A::init();
-  GPIO_A::Pin<9>::setMode(GPIO_MODE_ALTERNATE, 0);
-
-  Clock::setMSIRange(RCC_ICSCR_MSIRANGE_4);
+  // Clock::setClockOut(RCC_CFGR_MCOSEL_SYSCLK);
+  // GPIO_A::init();
+  // GPIO_A::Pin<9>::setMode(GPIO_MODE_ALTERNATE, 0);
+  //
+  // Clock::setMSIRange(RCC_ICSCR_MSIRANGE_4);
 }
 
 typedef GPIO_A::Pin<4> LEDPin;
@@ -20,7 +20,16 @@ void notmain(void) {
 
   LEDPin::GPIO::init();
   LEDPin::setMode(GPIO_MODE_OUTPUT, 0);
-  LEDPin::set();
+
+  DebugUART::init();
+  DebugPrint("Hello, world!");
+
+  while (true) {
+    LEDPin::set();
+    DELAY(20000);
+    LEDPin::clear();
+    DELAY(20000);
+  }
 
   DELAY(10000000);
   //

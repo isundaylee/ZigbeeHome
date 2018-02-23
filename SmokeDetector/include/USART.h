@@ -2,6 +2,7 @@
 
 #include <stm32l0xx.h>
 
+#include "Clock.h"
 #include "GPIO.h"
 #include "Interrupt.h"
 #include "RingBuffer.h"
@@ -10,7 +11,8 @@ extern "C" void vector_usart2();
 
 template <uintptr_t usartAddr> class USART {
 private:
-  static_assert(usartAddr == USART2_BASE, "Invalid usartAddr given");
+  static_assert(usartAddr == LPUART1_BASE || usartAddr == USART2_BASE,
+                "Invalid usartAddr given");
 
   static volatile RingBuffer<uint8_t, 64> rxBuffer_;
 
@@ -20,16 +22,26 @@ private:
 
 public:
   static void init() {
-    if (usartAddr == USART2_BASE) {
+    if constexpr (usartAddr == LPUART1_BASE) {
+      RCC->APB1ENR |= RCC_APB1ENR_LPUART1EN;
+
+      GPIO_A::init();
+      GPIO_A::Pin<1>::setMode(GPIO_MODE_ALTERNATE, 6);
+
+      usart()->BRR = 4660;
+    } else if constexpr (usartAddr == USART2_BASE) {
       RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
       GPIO_A::init();
-      GPIO_A::Pin<9>::setMode(GPIO_MODE_ALTERNATE, 0b0100);
-      GPIO_A::Pin<10>::setMode(GPIO_MODE_ALTERNATE, 0b0100);
+      GPIO_A::Pin<9>::setMode(GPIO_MODE_ALTERNATE, 4);
+      GPIO_A::Pin<10>::setMode(GPIO_MODE_ALTERNATE, 4);
+
+      usart()->BRR = Clock::currentClockFrequency / 115200;
     }
 
+    // usart()->BRR = 2100000 / 115200;
+
     usart()->CR1 &= ~(USART_CR1_M);
-    usart()->BRR = 2100000 / 115200;
     usart()->CR1 |= USART_CR1_RXNEIE;
     usart()->CR1 |= USART_CR1_UE;
     usart()->CR1 |= USART_CR1_TE;
@@ -78,3 +90,4 @@ template <uintptr_t usartAddr>
 volatile RingBuffer<uint8_t, 64> USART<usartAddr>::rxBuffer_;
 
 typedef USART<USART2_BASE> USART_2;
+typedef USART<LPUART1_BASE> LPUART_1;
