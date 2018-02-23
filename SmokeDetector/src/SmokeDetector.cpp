@@ -5,15 +5,53 @@
 #include "USART.h"
 #include "Zigbee.h"
 
-void setupClock() {
-  // Clock::setClockOut(RCC_CFGR_MCOSEL_SYSCLK);
-  // GPIO_A::init();
-  // GPIO_A::Pin<9>::setMode(GPIO_MODE_ALTERNATE, 0);
-  //
-  // Clock::setMSIRange(RCC_ICSCR_MSIRANGE_4);
-}
+void setupClock() {}
 
 typedef GPIO_A::Pin<4> LEDPin;
+typedef Zigbee<USART_2, GPIO_A::Pin<7>> MyZigbee;
+
+bool setupBeeRouter(MyZigbee &bee) {
+  bee.init();
+  bee.reset();
+  DebugPrint("Bee came to life!\n");
+
+  if (bee.resetSettings()) {
+    DebugPrint("Reset successful!\n");
+  } else {
+    DebugPrint("Reset failed...\n");
+    return false;
+  }
+
+  if (bee.setRole(ZIGBEE_ROLE_ROUTER)) {
+    DebugPrint("Setting role was successful!\n");
+  } else {
+    DebugPrint("Setting role failed...\n");
+    return false;
+  }
+
+  if (bee.setChannelMask(true, 0x00002000)) {
+    DebugPrint("Setting primary channel mask was successful!\n");
+  } else {
+    DebugPrint("Setting primary channel mask failed...\n");
+    return false;
+  }
+
+  if (bee.setChannelMask(false, 0x00002000)) {
+    DebugPrint("Setting primary channel mask was successful!\n");
+  } else {
+    DebugPrint("Setting primary channel mask failed...\n");
+    return false;
+  }
+
+  if (bee.startCommissioning(ZIGBEE_COMMISSIONING_MODE_NETWORK_STEERING)) {
+    DebugPrint("Starting network steering was successful!\n");
+  } else {
+    DebugPrint("Starting network steering failed...\n");
+    return false;
+  }
+
+  return true;
+}
 
 void notmain(void) {
   setupClock();
@@ -22,35 +60,17 @@ void notmain(void) {
   LEDPin::setMode(GPIO_MODE_OUTPUT, 0);
 
   DebugUART::init();
-  DebugPrint("Hello, world!");
+  DebugPrint("Hello, world!\n");
+
+  LEDPin::GPIO::init();
+  LEDPin::setMode(GPIO_MODE_OUTPUT);
+  LEDPin::clear();
+
+  MyZigbee bee;
+  setupBeeRouter(bee);
 
   while (true) {
-    LEDPin::set();
-    DELAY(20000);
-    LEDPin::clear();
-    DELAY(20000);
+    LEDPin::set(bee.zdoState == ZIGBEE_ZDO_STATE_ROUTER);
+    bee.process();
   }
-
-  DELAY(10000000);
-  //
-  //
-  // while (true) {
-  //   GPIO_A::Pin<4>::set();
-  //   DELAY(10000);
-  //   GPIO_A::Pin<4>::clear();
-  // }
-  //
-  // DELAY(10000000);
-
-  // LEDPin::GPIO::init();
-  // LEDPin::setMode(GPIO_MODE_OUTPUT);
-  // LEDPin::clear();
-  //
-  // Zigbee<USART_2, GPIO_A::Pin<1>> bee;
-  // bee.reset();
-  //
-  // while (true) {
-  //   LEDPin::set(bee.isPowered);
-  //   bee.process();
-  // }
 }

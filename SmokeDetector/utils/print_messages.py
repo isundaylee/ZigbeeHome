@@ -59,9 +59,9 @@ class ListeningThread(threading.Thread):
             log('Received command (%s %s): payload = %s' %
                 (cmd_type, bytes_to_string(cmd), bytes_to_string(data)))
 
-if sys.argv[1] == 'master':
+if sys.argv[1] == 'slave':
     DEV = '/dev/cu.wchusbserial401120'
-elif sys.argv[1] == 'slave':
+elif sys.argv[1] == 'master':
     DEV = '/dev/cu.usbserial-A9M9DV3R'
 else:
     raise RuntimeError("Invalid device given.")
@@ -90,7 +90,7 @@ with serial.Serial(DEV, 115200) as s:
             send_command(s, b'\x21\x09\x03\x00\x00\x01\x03')
             send_command(s, b'\x41\x00\x00')
 
-            time.sleep(3)
+            time.sleep(5)
 
             log('Setting role...')
             send_command(s, b'\x21\x09\x87\x00\x00\x01\x00')
@@ -102,7 +102,7 @@ with serial.Serial(DEV, 115200) as s:
             log('Starting network formation...')
             send_command(s, b'\x2F\x05\x04')
 
-            time.sleep(3)
+            time.sleep(8)
 
             log('Starting listening on hooks...')
             send_command(s, b'\x21\x09\x8F\x00\x00\x01\x01')

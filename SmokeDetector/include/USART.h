@@ -36,7 +36,7 @@ public:
       GPIO_A::Pin<9>::setMode(GPIO_MODE_ALTERNATE, 4);
       GPIO_A::Pin<10>::setMode(GPIO_MODE_ALTERNATE, 4);
 
-      usart()->BRR = Clock::currentClockFrequency / 115200;
+      usart()->BRR = 2097000 / 115200;
     }
 
     // usart()->BRR = 2100000 / 115200;
