@@ -5,16 +5,18 @@
 #include "USART.h"
 #include "Utils.h"
 
+const uint16_t ZIGBEE_CMD_AF_DATA_CONFIRM = 0x4480;
+const uint16_t ZIGBEE_CMD_AF_DATA_REQUEST = 0x2401;
+const uint16_t ZIGBEE_CMD_AF_REGISTER = 0x2400;
 const uint16_t ZIGBEE_CMD_APP_CNF_BDB_COMMISSIONING_NOTIFICATION = 0x4F80;
 const uint16_t ZIGBEE_CMD_APP_CNF_BDB_SET_CHANNEL = 0x2F08;
 const uint16_t ZIGBEE_CMD_APP_CNF_BDB_START_COMMISSIONING = 0x2F05;
-const uint16_t ZIGBEE_CMD_AF_REGISTER = 0x2400;
-const uint16_t ZIGBEE_CMD_AF_DATA_REQUEST = 0x2401;
-const uint16_t ZIGBEE_CMD_AF_DATA_CONFIRM = 0x4480;
 const uint16_t ZIGBEE_CMD_SYS_OSAL_NV_WRITE = 0x2109;
 const uint16_t ZIGBEE_CMD_SYS_RESET_IND = 0x4180;
+const uint16_t ZIGBEE_CMD_ZB_PERMIT_JOINING_REQUEST = 0x2608;
 const uint16_t ZIGBEE_CMD_ZDO_MGMT_PERMIT_JOIN_RSP = 0x45B6;
 const uint16_t ZIGBEE_CMD_ZDO_NODE_DESC_RSP = 0x4582;
+const uint16_t ZIGBEE_CMD_ZDO_STARTUP_FROM_APP = 0x2540;
 const uint16_t ZIGBEE_CMD_ZDO_STATE_CHANGE_IND = 0x45C0;
 
 const uint16_t ZIGBEE_CMD_SYNC_REPLY_MASK = 0x4000;
@@ -43,9 +45,13 @@ const uint8_t ZIGBEE_ZDO_STATE_ZB_COORD = 0x09;
 const uint8_t ZIGBEE_ZDO_STATE_NWK_ORPHAN = 0x0A;
 
 const uint16_t ZIGBEE_SYNC_COMMANDS[] = {
-    ZIGBEE_CMD_SYS_OSAL_NV_WRITE, ZIGBEE_CMD_APP_CNF_BDB_SET_CHANNEL,
-    ZIGBEE_CMD_APP_CNF_BDB_START_COMMISSIONING, ZIGBEE_CMD_AF_REGISTER,
-    ZIGBEE_CMD_AF_DATA_REQUEST};
+    ZIGBEE_CMD_AF_DATA_REQUEST,
+    ZIGBEE_CMD_AF_REGISTER,
+    ZIGBEE_CMD_APP_CNF_BDB_SET_CHANNEL,
+    ZIGBEE_CMD_APP_CNF_BDB_START_COMMISSIONING,
+    ZIGBEE_CMD_SYS_OSAL_NV_WRITE,
+    ZIGBEE_CMD_ZB_PERMIT_JOINING_REQUEST,
+    ZIGBEE_CMD_ZDO_STARTUP_FROM_APP};
 
 template <typename USART, typename ResetPin> class Zigbee {
 private:
@@ -59,6 +65,7 @@ private:
 
 public:
   bool isPowered = false;
+  bool isOnline = false;
   uint8_t zdoState = 0;
 
   Zigbee() {}
@@ -121,6 +128,10 @@ public:
 
     uint16_t cmd = (command_[2] << 8) | command_[3];
 
+    DebugPrint("[Zigbee] Received command ");
+    DebugPrintHex(cmd);
+    DebugPrint(".\n");
+
     for (int i = 0;
          i < sizeof(ZIGBEE_SYNC_COMMANDS) / sizeof(ZIGBEE_SYNC_COMMANDS[0]);
          i++) {
@@ -141,6 +152,11 @@ public:
       break;
     case ZIGBEE_CMD_ZDO_STATE_CHANGE_IND:
       zdoState = command_[4];
+
+      isOnline = (zdoState == ZIGBEE_ZDO_STATE_ZB_COORD ||
+                  zdoState == ZIGBEE_ZDO_STATE_ROUTER ||
+                  zdoState == ZIGBEE_ZDO_STATE_END_DEVICE);
+
       DebugPrint("[Zigbee] ZDO state changed to ");
       DebugPrint(humanReadableZDOState(zdoState));
       DebugPrint(".\n");
@@ -186,10 +202,13 @@ public:
     }
   }
 
-  bool sendSyncCommand(uint16_t command, uint8_t dataSize, uint8_t *data) {
+  bool sendSyncCommand(uint16_t command, uint8_t dataSize, uint8_t *data,
+                       bool wait = true) {
     DELAY(20000);
 
-    pendingSyncCommand_ = command;
+    if (wait) {
+      pendingSyncCommand_ = command;
+    }
 
     USART::write(static_cast<uint8_t>(0xFE));
     USART::write(static_cast<uint8_t>(dataSize));
@@ -205,8 +224,10 @@ public:
 
     USART::write(FCS);
 
-    while (pendingSyncCommand_ != ZIGBEE_CMD_INVALID) {
-      process();
+    if (wait) {
+      while (pendingSyncCommand_ != ZIGBEE_CMD_INVALID) {
+        process();
+      }
     }
 
     return (lastSyncCommandStatus_ == 0);
@@ -292,8 +313,21 @@ public:
     for (uint8_t i = 0; i < dataLen; i++) {
       *(ptr++) = msgData[i];
     }
-
+    sendSyncCommand(ZIGBEE_CMD_AF_DATA_REQUEST, ptr - data, data, false);
+    DELAY(10000);
+    DebugPrint("Sending next");
     return sendSyncCommand(ZIGBEE_CMD_AF_DATA_REQUEST, ptr - data, data);
+  }
+
+  bool permitJoiningRequest(uint16_t dest, uint8_t timeout) {
+    uint8_t data[] = {dest & 0x00FF, (dest & 0xFF00) >> 8, timeout};
+    return sendSyncCommand(ZIGBEE_CMD_ZB_PERMIT_JOINING_REQUEST, sizeof(data),
+                           data);
+  }
+
+  bool startup(uint16_t delay = 0) {
+    uint8_t data[] = {delay & 0x00FF, (delay & 0xFF00) >> 8};
+    return sendSyncCommand(ZIGBEE_CMD_ZDO_STARTUP_FROM_APP, sizeof(data), data);
   }
 
   void reset() {
@@ -302,6 +336,7 @@ public:
     ResetPin::set();
 
     isPowered = false;
+    isOnline = false;
 
     while (!isPowered) {
       process();

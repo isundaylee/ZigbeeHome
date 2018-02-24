@@ -10,55 +10,35 @@ void setupClock() {}
 typedef GPIO_A::Pin<4> LEDPin;
 typedef Zigbee<USART_2, GPIO_A::Pin<7>> MyZigbee;
 
-bool setupBeeRouter(MyZigbee &bee) {
+bool report(const char *action, bool result) {
+  DebugPrint("[Main]   ");
+  DebugPrint(action);
+  if (result) {
+    DebugPrint(" succeeded! \n");
+  } else {
+    DebugPrint(" failed... \n");
+  }
+
+  return result;
+}
+
+void setupBee(MyZigbee &bee, uint8_t role, bool reset = false) {
   bee.init();
   DebugPrint("[Main]   Bee came to life!\n");
 
-  if (bee.resetSettings()) {
-    DebugPrint("[Main]   Reset successful!\n");
-  } else {
-    DebugPrint("[Main]   Reset failed...\n");
-    return false;
-  }
-
-  if (bee.setRole(ZIGBEE_ROLE_ROUTER)) {
-    DebugPrint("[Main]   Setting role was successful!\n");
-  } else {
-    DebugPrint("[Main]   Setting role failed...\n");
-    return false;
-  }
-
-  if (bee.setChannelMask(true, 0x00002000)) {
-    DebugPrint("[Main]   Setting primary channel mask was successful!\n");
-  } else {
-    DebugPrint("[Main]   Setting primary channel mask failed...\n");
-    return false;
-  }
-
-  if (bee.setChannelMask(false, 0x00002000)) {
-    DebugPrint("[Main]   Setting primary channel mask was successful!\n");
-  } else {
-    DebugPrint("[Main]   Setting primary channel mask failed...\n");
-    return false;
-  }
-
-  if (bee.startCommissioning(ZIGBEE_COMMISSIONING_MODE_NETWORK_STEERING)) {
-    DebugPrint("[Main]   Starting network steering was successful!\n");
-  } else {
-    DebugPrint("[Main]   Starting network steering failed...\n");
-    return false;
+  if (reset) {
+    report("Reset", bee.resetSettings());
+    report("Setting role", bee.setRole(role));
+    report("Setting primary channel", bee.setChannelMask(true, 0x00002000));
+    report("Setting secondary channel", bee.setChannelMask(false, 0x00002000));
   }
 
   uint16_t clusters[] = {0x0000, 0x0006};
-  if (bee.registerEndpoint(0x01, 0x0104, 0x0100, 0x00, 2, clusters, 2,
-                           clusters)) {
-    DebugPrint("[Main]   Registration was successful!\n");
-  } else {
-    DebugPrint("[Main]   Registration failed...\n");
-    return false;
-  }
-
-  return true;
+  report("Registration", bee.registerEndpoint(0x01, 0x0104, 0x0100, 0x00, 2,
+                                              clusters, 2, clusters));
+  report("Starting formation", bee.startup());
+  while (!bee.isOnline)
+    bee.process();
 }
 
 void notmain(void) {
@@ -75,26 +55,34 @@ void notmain(void) {
   LEDPin::clear();
 
   MyZigbee bee;
-  setupBeeRouter(bee);
-
-  while (bee.zdoState != ZIGBEE_ZDO_STATE_ROUTER)
-    bee.process();
-
-  uint8_t reqData[] = {0x11, 0x22, 0x33};
+  setupBee(bee, ZIGBEE_ROLE_ROUTER, true);
 
   while (true) {
-    if (bee.dataRequest(0x0000, 0x01, 0x01, 0x0006, 0x00, 0x08, 0x0F,
-                        sizeof(reqData), reqData)) {
-      DebugPrint("[Main]   Data request was successful!\n");
-    } else {
-      DebugPrint("[Main]   Data request failed...\n");
-    }
-
-    DELAY(200000);
+    bee.process();
+    LEDPin::set(bee.isOnline);
+    report("Permitting joining", bee.permitJoiningRequest(0xFFFC, 0xFF));
+    DELAY(2000000);
   }
 
+  // while (!bee.isOnline)
+  //   bee.process();
+  //
+  // DELAY(2000000);
+  //
+  // uint8_t reqData[] = {0x11, 0x22, 0x33};
+  //
+  // while (true) {
+  //   DebugPrint("[Main]  Sending data request...\n");
+  //   if (bee.dataRequest(0x0000, 0x01, 0x01, 0x0006, 0x00, 0x08, 0x0F,
+  //                       sizeof(reqData), reqData)) {
+  //     DebugPrint("[Main]   Data request was successful!\n");
+  //   } else {
+  //     DebugPrint("[Main]   Data request failed...\n");
+  //   }
+  //
+  //   DELAY(200000);
+  // }
+  //
   while (true) {
-    LEDPin::set(bee.zdoState == ZIGBEE_ZDO_STATE_ROUTER);
-    bee.process();
   }
 }
