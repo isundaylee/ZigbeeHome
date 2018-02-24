@@ -48,6 +48,7 @@ const uint8_t ZIGBEE_ZDO_STATE_ZB_COORD = 0x09;
 const uint8_t ZIGBEE_ZDO_STATE_NWK_ORPHAN = 0x0A;
 
 const uint8_t ZIGBEE_STATUS_SUCCESS = 0x00;
+const uint8_t ZIGBEE_STATUS_NO_ROUTE = 0xCD;
 const uint8_t ZIGBEE_STATUS_TIMEOUT = 0xFF;
 
 const uint16_t ZIGBEE_SYNC_COMMANDS[] = {
