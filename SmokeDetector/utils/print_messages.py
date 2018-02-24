@@ -85,36 +85,30 @@ with serial.Serial(DEV, 115200) as s:
     listener.start()
 
     if len(sys.argv) > 2:
-        if sys.argv[2] == 'coord':
-            log('Setting reset bit and restarting...')
-            send_command(s, b'\x21\x09\x03\x00\x00\x01\x03')
-            send_command(s, b'\x41\x00\x00')
+        should_reset = (len(sys.argv) < 3 and sys.argv[3] == 'reset')
 
+        if sys.argv[2] == 'coord':
+            if should_reset:
+                log('Setting reset...')
+                send_command(s, b'\x21\x09\x03\x00\x00\x01\x03')
+
+            log('Restarting...')
+            send_command(s, b'\x41\x00\x00')
             time.sleep(5)
 
-            log('Setting role...')
-            send_command(s, b'\x21\x09\x87\x00\x00\x01\x00')
-
-            log('Setting channel masks...')
-            send_command(s, b'\x2F\x08\x01\x00\x20\x00\x00')
-            send_command(s, b'\x2F\x08\x00\x00\x00\x00\x00')
-
-            log('Starting network formation...')
-            send_command(s, b'\x2F\x05\x04')
-
-            time.sleep(8)
-
-            log('Starting listening on hooks...')
-            send_command(s, b'\x21\x09\x8F\x00\x00\x01\x01')
-
-            log('Starting network steering...')
-            send_command(s, b'\x2F\x05\x02')
-
-            time.sleep(1)
+            if should_reset:
+                log('Setting role and channel masks...')
+                send_command(s, b'\x21\x09\x87\x00\x00\x01\x00')
+                send_command(s, b'\x2F\x08\x01\x00\x20\x00\x00')
+                send_command(s, b'\x2F\x08\x00\x00\x00\x00\x00')
 
             log('Registering...')
-            # send_command(s, b'\x24\x00\x01\x04\x01\x00\x01\x00\x00\x02\x00\x00\x06\x00\x00\x00\x06\x00')
             send_command(s, b'\x24\x00\x01\x04\x01\x00\x01\x00\x00\x02\x00\x00\x06\x00\x02\x00\x00\x06\x00')
+
+            log('Starting up...')
+            send_command(s, b'\x25\x40\x00\x00')
+            time.sleep(3)
+            send_command(s, b'\x2f\x05\x02')
         elif sys.argv[2] == 'router':
             log('Setting reset bit and restarting...')
             send_command(s, b'\x21\x09\x03\x00\x00\x01\x03')

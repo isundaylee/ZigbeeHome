@@ -6,6 +6,8 @@
 #include "USART.h"
 #include "Utils.h"
 
+const bool ZIGBEE_VERBOSE_LOGGING = false;
+
 const uint16_t ZIGBEE_CMD_AF_DATA_CONFIRM = 0x4480;
 const uint16_t ZIGBEE_CMD_AF_DATA_REQUEST = 0x2401;
 const uint16_t ZIGBEE_CMD_AF_REGISTER = 0x2400;
@@ -45,6 +47,9 @@ const uint8_t ZIGBEE_ZDO_STATE_COORD_STARTING = 0x08;
 const uint8_t ZIGBEE_ZDO_STATE_ZB_COORD = 0x09;
 const uint8_t ZIGBEE_ZDO_STATE_NWK_ORPHAN = 0x0A;
 
+const uint8_t ZIGBEE_STATUS_SUCCESS = 0x00;
+const uint8_t ZIGBEE_STATUS_TIMEOUT = 0xFF;
+
 const uint16_t ZIGBEE_SYNC_COMMANDS[] = {
     ZIGBEE_CMD_AF_DATA_REQUEST,
     ZIGBEE_CMD_AF_REGISTER,
@@ -53,6 +58,9 @@ const uint16_t ZIGBEE_SYNC_COMMANDS[] = {
     ZIGBEE_CMD_SYS_OSAL_NV_WRITE,
     ZIGBEE_CMD_ZB_PERMIT_JOINING_REQUEST,
     ZIGBEE_CMD_ZDO_STARTUP_FROM_APP};
+
+const uint32_t ZIGBEE_TIMEOUT_SYNC = 2000;
+const uint32_t ZIGBEE_TIMEOUT_RESET = 5000;
 
 template <typename USART, typename ResetPin> class Zigbee {
 private:
@@ -76,8 +84,6 @@ public:
 
     ResetPin::GPIO::init();
     ResetPin::setMode(GPIO_MODE_OUTPUT);
-
-    reset();
   }
 
   uint8_t calculateFCS() {
@@ -129,9 +135,11 @@ public:
 
     uint16_t cmd = (command_[2] << 8) | command_[3];
 
-    DebugPrint("[Zigbee] Received command ");
-    DebugPrintHex(cmd);
-    DebugPrint(".\n");
+    if constexpr (ZIGBEE_VERBOSE_LOGGING) {
+      DebugPrint("[Zigbee] Received command ");
+      DebugPrintHex(cmd);
+      DebugPrint(".\n");
+    }
 
     for (int i = 0;
          i < sizeof(ZIGBEE_SYNC_COMMANDS) / sizeof(ZIGBEE_SYNC_COMMANDS[0]);
@@ -203,8 +211,8 @@ public:
     }
   }
 
-  bool sendSyncCommand(uint16_t command, uint8_t dataSize, uint8_t *data,
-                       bool wait = true) {
+  uint8_t sendSyncCommand(uint16_t command, uint8_t dataSize, uint8_t *data,
+                          bool wait = true) {
     Tick::delay(10);
 
     if (wait) {
@@ -227,33 +235,36 @@ public:
 
     if (wait) {
       uint32_t start = Tick::value;
-      while (!Tick::hasElapsedSince(start, 2000)) {
+      while (!Tick::hasElapsedSince(start, ZIGBEE_TIMEOUT_SYNC)) {
         process();
         if (pendingSyncCommand_ == ZIGBEE_CMD_INVALID) {
-          return (lastSyncCommandStatus_ == 0);
+          return lastSyncCommandStatus_;
         }
       }
+      return ZIGBEE_STATUS_TIMEOUT;
     } else {
-      return true;
+      return ZIGBEE_STATUS_SUCCESS;
     }
   }
 
-  bool resetSettings() {
+  uint8_t resetSettings() {
     uint8_t data[] = {0x03, 0x00, 0x00, 0x01, 0x03};
-    if (!sendSyncCommand(ZIGBEE_CMD_SYS_OSAL_NV_WRITE, sizeof(data), data)) {
-      return false;
+    uint8_t status;
+    if ((status = sendSyncCommand(ZIGBEE_CMD_SYS_OSAL_NV_WRITE, sizeof(data),
+                                  data)) != ZIGBEE_STATUS_SUCCESS) {
+      DebugPrintHex(status);
+      return status;
     }
 
-    reset();
-    return true;
+    return reset();
   }
 
-  bool setRole(uint8_t role) {
+  uint8_t setRole(uint8_t role) {
     uint8_t data[] = {0x87, 0x00, 0x00, 0x01, role};
     return sendSyncCommand(ZIGBEE_CMD_SYS_OSAL_NV_WRITE, sizeof(data), data);
   }
 
-  bool setChannelMask(bool primary, uint32_t channelMask) {
+  uint8_t setChannelMask(bool primary, uint32_t channelMask) {
     uint8_t data[] = {primary ? 0x01 : 0x00, (channelMask & 0x000000FF) >> 0,
                       (channelMask & 0x0000FF00) >> 8,
                       (channelMask & 0x00FF0000) >> 16,
@@ -262,16 +273,16 @@ public:
                            data);
   }
 
-  bool startCommissioning(uint8_t commissioningMode) {
+  uint8_t startCommissioning(uint8_t commissioningMode) {
     uint8_t data[] = {commissioningMode};
     return sendSyncCommand(ZIGBEE_CMD_APP_CNF_BDB_START_COMMISSIONING,
                            sizeof(data), data);
   }
 
-  bool registerEndpoint(uint8_t endpoint, uint16_t appProfId,
-                        uint16_t appDeviceId, uint8_t appDevVer,
-                        uint8_t numInClusters, uint16_t *inClusters,
-                        uint8_t numOutClusters, uint16_t *outClusters) {
+  uint8_t registerEndpoint(uint8_t endpoint, uint16_t appProfId,
+                           uint16_t appDeviceId, uint8_t appDevVer,
+                           uint8_t numInClusters, uint16_t *inClusters,
+                           uint8_t numOutClusters, uint16_t *outClusters) {
     uint8_t data[0x49];
     uint8_t *ptr = data;
 
@@ -298,9 +309,10 @@ public:
     return sendSyncCommand(ZIGBEE_CMD_AF_REGISTER, ptr - data, data);
   }
 
-  bool dataRequest(uint16_t dstAddr, uint8_t dstEndpoint, uint8_t srcEndpoint,
-                   uint16_t clusterId, uint8_t transId, uint8_t options,
-                   uint8_t radius, uint8_t dataLen, uint8_t *msgData) {
+  uint8_t dataRequest(uint16_t dstAddr, uint8_t dstEndpoint,
+                      uint8_t srcEndpoint, uint16_t clusterId, uint8_t transId,
+                      uint8_t options, uint8_t radius, uint8_t dataLen,
+                      uint8_t *msgData) {
     uint8_t data[0x8A];
     uint8_t *ptr = data;
 
@@ -318,21 +330,22 @@ public:
     for (uint8_t i = 0; i < dataLen; i++) {
       *(ptr++) = msgData[i];
     }
+
     return sendSyncCommand(ZIGBEE_CMD_AF_DATA_REQUEST, ptr - data, data);
   }
 
-  bool permitJoiningRequest(uint16_t dest, uint8_t timeout) {
+  uint8_t permitJoiningRequest(uint16_t dest, uint8_t timeout) {
     uint8_t data[] = {dest & 0x00FF, (dest & 0xFF00) >> 8, timeout};
     return sendSyncCommand(ZIGBEE_CMD_ZB_PERMIT_JOINING_REQUEST, sizeof(data),
                            data);
   }
 
-  bool startup(uint16_t delay = 0) {
+  uint8_t startup(uint16_t delay = 0) {
     uint8_t data[] = {delay & 0x00FF, (delay & 0xFF00) >> 8};
     return sendSyncCommand(ZIGBEE_CMD_ZDO_STARTUP_FROM_APP, sizeof(data), data);
   }
 
-  void reset() {
+  uint8_t reset() {
     ResetPin::clear();
     Tick::delay(100);
     ResetPin::set();
@@ -340,8 +353,13 @@ public:
     isPowered = false;
     isOnline = false;
 
-    while (!isPowered) {
+    uint32_t start = Tick::value;
+    while (!Tick::hasElapsedSince(start, ZIGBEE_TIMEOUT_RESET)) {
       process();
+      if (isPowered) {
+        return ZIGBEE_STATUS_SUCCESS;
+      }
     }
+    return ZIGBEE_STATUS_TIMEOUT;
   }
 };

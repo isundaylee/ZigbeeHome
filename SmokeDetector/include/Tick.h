@@ -28,6 +28,6 @@ public:
   }
 
   static bool hasElapsedSince(uint32_t since, uint32_t duration) {
-    return (value < since + duration);
+    return (value >= since + duration);
   }
 };
