@@ -41,9 +41,6 @@ void setupBee(MyZigbee &bee, uint8_t role, bool reset = false) {
   report("Registration", bee.registerEndpoint(0x01, 0x0104, 0x0100, 0x00, 2,
                                               clusters, 2, clusters));
   report("Starting network", bee.startup());
-  while (!bee.isOnline)
-    bee.process();
-  LEDPin::set();
 }
 
 void notmain(void) {
@@ -58,19 +55,25 @@ void notmain(void) {
   LEDPin::setMode(GPIO_MODE_OUTPUT);
   LEDPin::clear();
 
-  uint32_t setupStart = Tick::value;
-
   MyZigbee bee;
-  setupBee(bee, ZIGBEE_ROLE_ROUTER, false);
-
-  DebugPrint("[Main]   Setup completed in ");
-  DebugPrintHex(Tick::value - setupStart);
-  DebugPrint(" ms.\n");
 
   uint8_t reqData[] = {0x11, 0x22, 0x33};
 
   while (true) {
     uint8_t errors = 0;
+
+    setupBee(bee, ZIGBEE_ROLE_ROUTER, false);
+    uint32_t start = Tick::value;
+    while (!Tick::hasElapsedSince(start, 10000)) {
+      bee.process();
+      if (bee.isOnline) {
+        LEDPin::set();
+        break;
+      }
+    }
+    if (!bee.isOnline) {
+      continue;
+    }
 
     while (true) {
       if (report("Sending data",
@@ -80,12 +83,11 @@ void notmain(void) {
         errors++;
 
         if (errors >= 3) {
+          LEDPin::clear();
           break;
         }
       }
       Tick::delay(1000);
     }
-
-    setupBee(bee, ZIGBEE_ROLE_ROUTER, false);
   }
 }

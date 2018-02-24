@@ -60,7 +60,7 @@ const uint16_t ZIGBEE_SYNC_COMMANDS[] = {
     ZIGBEE_CMD_ZB_PERMIT_JOINING_REQUEST,
     ZIGBEE_CMD_ZDO_STARTUP_FROM_APP};
 
-const uint32_t ZIGBEE_TIMEOUT_SYNC = 2000;
+const uint32_t ZIGBEE_TIMEOUT_SYNC = 5000;
 const uint32_t ZIGBEE_TIMEOUT_RESET = 5000;
 
 template <typename USART, typename ResetPin> class Zigbee {
