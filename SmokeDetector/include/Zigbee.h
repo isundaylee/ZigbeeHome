@@ -2,6 +2,7 @@
 
 #include "GPIO.h"
 #include "RingBuffer.h"
+#include "Tick.h"
 #include "USART.h"
 #include "Utils.h"
 
@@ -204,7 +205,7 @@ public:
 
   bool sendSyncCommand(uint16_t command, uint8_t dataSize, uint8_t *data,
                        bool wait = true) {
-    DELAY(20000);
+    Tick::delay(10);
 
     if (wait) {
       pendingSyncCommand_ = command;
@@ -225,12 +226,16 @@ public:
     USART::write(FCS);
 
     if (wait) {
-      while (pendingSyncCommand_ != ZIGBEE_CMD_INVALID) {
+      uint32_t start = Tick::value;
+      while (!Tick::hasElapsedSince(start, 2000)) {
         process();
+        if (pendingSyncCommand_ == ZIGBEE_CMD_INVALID) {
+          return (lastSyncCommandStatus_ == 0);
+        }
       }
+    } else {
+      return true;
     }
-
-    return (lastSyncCommandStatus_ == 0);
   }
 
   bool resetSettings() {
@@ -313,9 +318,6 @@ public:
     for (uint8_t i = 0; i < dataLen; i++) {
       *(ptr++) = msgData[i];
     }
-    sendSyncCommand(ZIGBEE_CMD_AF_DATA_REQUEST, ptr - data, data, false);
-    DELAY(10000);
-    DebugPrint("Sending next");
     return sendSyncCommand(ZIGBEE_CMD_AF_DATA_REQUEST, ptr - data, data);
   }
 
@@ -332,7 +334,7 @@ public:
 
   void reset() {
     ResetPin::clear();
-    DELAY(20000);
+    Tick::delay(100);
     ResetPin::set();
 
     isPowered = false;

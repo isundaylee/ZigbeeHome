@@ -2,6 +2,7 @@
 
 #include "Clock.h"
 #include "GPIO.h"
+#include "Tick.h"
 #include "USART.h"
 #include "Zigbee.h"
 
@@ -44,8 +45,7 @@ void setupBee(MyZigbee &bee, uint8_t role, bool reset = false) {
 void notmain(void) {
   setupClock();
 
-  LEDPin::GPIO::init();
-  LEDPin::setMode(GPIO_MODE_OUTPUT, 0);
+  Tick::init();
 
   DebugUART::init();
   DebugPrint("[Main]   Hello, world!\n");
@@ -61,7 +61,7 @@ void notmain(void) {
     bee.process();
     LEDPin::set(bee.isOnline);
     report("Permitting joining", bee.permitJoiningRequest(0xFFFC, 0xFF));
-    DELAY(2000000);
+    Tick::delay(10000);
   }
 
   // while (!bee.isOnline)

@@ -28,7 +28,7 @@
 .word   spin
 .word   spin
 .word   spin
-.word   spin
+.word   vector_systick
 
 /* 0x40-C */
 .word   spin
