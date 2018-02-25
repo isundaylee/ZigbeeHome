@@ -2,6 +2,11 @@
 
 #include "USART.h"
 
+#define WAIT_UNTIL(condition)                                                  \
+  do {                                                                         \
+    asm("nop");                                                                \
+  } while (!(condition))
+
 typedef LPUART_1 DebugUART;
 
 template <typename T> void DebugPrint(T data) { DebugUART::write(data); }
