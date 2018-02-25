@@ -44,7 +44,7 @@ typedef GPIO_A::Pin<4> LEDPin;
 //   report("Starting network", bee.startup());
 // }
 
-void notmain(void) {
+extern "C" void main(void) {
   Tick::init();
 
   DebugUART::init();
@@ -57,11 +57,13 @@ void notmain(void) {
   ADC_1::init();
   DebugPrint("[Main]   ADC initialized!\n");
 
-  // ADC_1::enableTemperatureSensor();
-  ADC_1::selectChannel(0);
+  ADC_1::enableVoltageReference();
+  ADC_1::selectChannel(ADC_CHANNEL_VOLTAGE_REFERENCE);
   while (true) {
-    DebugPrintHex(ADC_1::convert());
+    DebugPrintHex(3 * 4096 * ADC_1::getVoltageReferenceCalibrationValue() /
+                  ADC_1::convert());
     DebugPrint("\n");
+    Tick::delay(500);
   }
 
   // MyZigbee bee;

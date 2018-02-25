@@ -14,7 +14,7 @@ CC_FLAGS	+= -mthumb
 CC_FLAGS	+= -mfloat-abi=soft
 
 CC_FLAGS	+= -g
-CC_FLAGS	+= -O0
+CC_FLAGS	+= -O2
 CC_FLAGS    += -std=c++17
 CC_FLAGS 	+= -nostdlib
 CC_FLAGS    += -ffreestanding
@@ -35,6 +35,10 @@ CC_FLAGS_AS	= -target arm-none-eabi
 CC_FLAGS_AS	+= -mcpu=cortex-m0
 CC_FLAGS_AS	+= -mfloat-abi=soft
 
+LD_FLAGS	= -Llib/libaeabi-cortexm0
+LD_FLAGS	+= -laeabi-cortexm0
+CC_FLAGS	+= -mcpu=cortex-m0
+
 BUILDDIR 	= build
 SRCDIR		= src
 
@@ -44,11 +48,16 @@ HEADERS		= $(wildcard include/*.h)
 CPPOBJS 	= $(patsubst $(SRCDIR)/%.cpp, $(BUILDDIR)/%.o, $(wildcard $(SRCDIR)/*.cpp))
 OBJS 		= $(CPPOBJS) $(BUILDDIR)/Boot.o
 
+AEABI_LIB	= lib/libaeabi-cortexm0/libaeabi-cortexm0.a
+
 all: $(BUILDDIR)/$(NAME).bin
 
 ################################################################################
 # Compilation stage
 ################################################################################
+
+$(AEABI_LIB):
+	cd lib/libaeabi-cortexm0 && make
 
 $(CPPOBJS): $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp $(HEADERS)
 	# echo $(CPPOBJS)
@@ -61,8 +70,8 @@ $(BUILDDIR)/Boot.o: $(SRCDIR)/Boot.s
 # Linking stage
 ################################################################################
 
-$(BUILDDIR)/$(NAME).elf: $(OBJS) $(SRCDIR)/$(NAME).lds
-	$(LD) -T $(SRCDIR)/$(NAME).lds $(OBJS) -o $@
+$(BUILDDIR)/$(NAME).elf: $(OBJS) $(SRCDIR)/$(NAME).lds $(AEABI_LIB)
+	$(LD) -T $(SRCDIR)/$(NAME).lds $(OBJS) $(LD_FLAGS) -o $@
 
 $(BUILDDIR)/$(NAME).dump: $(BUILDDIR)/$(NAME).elf
 	$(DUMP) $< >$@
@@ -82,6 +91,7 @@ gdb: $(BUILDDIR)/$(NAME).elf
 
 clean:
 	rm -f $(BUILDDIR)/*
+	rm -f $(AEABI_LIB)
 
 size: $(BUILDDIR)/$(NAME).elf
 	$(SIZE) $(BUILDDIR)/$(NAME).elf

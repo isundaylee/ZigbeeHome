@@ -6,7 +6,7 @@ extern uint8_t __attribute__((may_alias)) __data_start__;
 extern uint8_t __attribute__((may_alias)) __data_start_load__;
 extern uint8_t __attribute__((may_alias)) __data_end__;
 
-extern void notmain(void);
+extern "C" void main(void);
 
 extern "C" void startup(void) {
   // Zero the BSS section
@@ -28,5 +28,5 @@ extern "C" void startup(void) {
     (*p)();
   }
 
-  notmain();
+  main();
 }
