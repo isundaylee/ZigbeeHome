@@ -23,9 +23,11 @@ void DebugPrintHexRaw(int number) {
   }
 }
 
-void DebugPrintHex(int number) {
-  DebugUART::write(static_cast<uint8_t>('0'));
-  DebugUART::write(static_cast<uint8_t>('x'));
+void DebugPrintHex(int number, bool prefix = true) {
+  if (prefix) {
+    DebugUART::write(static_cast<uint8_t>('0'));
+    DebugUART::write(static_cast<uint8_t>('x'));
+  }
 
   if (number == 0) {
     DebugUART::write(static_cast<uint8_t>('0'));

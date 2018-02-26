@@ -6,7 +6,7 @@
 #include "USART.h"
 #include "Utils.h"
 
-const bool ZIGBEE_VERBOSE_LOGGING = false;
+const bool ZIGBEE_VERBOSE_LOGGING = true;
 
 const uint16_t ZIGBEE_CMD_AF_DATA_CONFIRM = 0x4480;
 const uint16_t ZIGBEE_CMD_AF_DATA_REQUEST = 0x2401;
@@ -62,6 +62,7 @@ const uint16_t ZIGBEE_SYNC_COMMANDS[] = {
 
 const uint32_t ZIGBEE_TIMEOUT_SYNC = 5000;
 const uint32_t ZIGBEE_TIMEOUT_RESET = 5000;
+const uint32_t ZIGBEE_TIMEOUT_DATA_CONFIRM = 1000;
 
 template <typename USART, typename ResetPin> class Zigbee {
 private:
@@ -69,13 +70,14 @@ private:
 
   uint16_t pendingSyncCommand_;
   uint8_t lastSyncCommandStatus_;
+  int pendingDataConfirmTransId_ = -1;
+  uint8_t lastDataConfirmStatus_;
 
   int commandDataLength() { return command_[1]; }
   int commandTotalLength() { return 1 + 1 + 2 + commandDataLength() + 1; }
 
 public:
   bool isPowered = false;
-  bool isOnline = false;
   uint8_t zdoState = 0;
 
   Zigbee() {}
@@ -139,6 +141,11 @@ public:
     if constexpr (ZIGBEE_VERBOSE_LOGGING) {
       DebugPrint("[Zigbee] Received command ");
       DebugPrintHex(cmd);
+      DebugPrint(":");
+      for (int i = 4; i < 4 + command_[1]; i++) {
+        DebugPrint(" ");
+        DebugPrintHex(command_[i], false);
+      }
       DebugPrint(".\n");
     }
 
@@ -162,17 +169,15 @@ public:
       break;
     case ZIGBEE_CMD_ZDO_STATE_CHANGE_IND:
       zdoState = command_[4];
-
-      isOnline = (zdoState == ZIGBEE_ZDO_STATE_ZB_COORD ||
-                  zdoState == ZIGBEE_ZDO_STATE_ROUTER ||
-                  zdoState == ZIGBEE_ZDO_STATE_END_DEVICE);
-
       DebugPrint("[Zigbee] ZDO state changed to ");
       DebugPrint(humanReadableZDOState(zdoState));
       DebugPrint(".\n");
       break;
     case ZIGBEE_CMD_AF_DATA_CONFIRM:
-      // TODO: handle data_confirm
+      if (command_[6] == pendingDataConfirmTransId_) {
+        lastDataConfirmStatus_ = command_[4];
+        pendingDataConfirmTransId_ = -1;
+      }
       break;
     case ZIGBEE_CMD_ZDO_NODE_DESC_RSP:
     case ZIGBEE_CMD_ZDO_MGMT_PERMIT_JOIN_RSP:
@@ -332,7 +337,23 @@ public:
       *(ptr++) = msgData[i];
     }
 
-    return sendSyncCommand(ZIGBEE_CMD_AF_DATA_REQUEST, ptr - data, data);
+    pendingDataConfirmTransId_ = transId;
+
+    uint8_t result =
+        sendSyncCommand(ZIGBEE_CMD_AF_DATA_REQUEST, ptr - data, data);
+    if (result != ZIGBEE_STATUS_SUCCESS) {
+      return result;
+    }
+
+    uint32_t start = Tick::value;
+    while (!Tick::hasElapsedSince(start, ZIGBEE_TIMEOUT_DATA_CONFIRM)) {
+      process();
+      if (pendingDataConfirmTransId_ == -1) {
+        return lastDataConfirmStatus_;
+      }
+    }
+
+    return ZIGBEE_STATUS_TIMEOUT;
   }
 
   uint8_t permitJoiningRequest(uint16_t dest, uint8_t timeout) {
@@ -352,7 +373,7 @@ public:
     ResetPin::set();
 
     isPowered = false;
-    isOnline = false;
+    zdoState = ZIGBEE_ZDO_STATE_HOLD;
 
     uint32_t start = Tick::value;
     while (!Tick::hasElapsedSince(start, ZIGBEE_TIMEOUT_RESET)) {
