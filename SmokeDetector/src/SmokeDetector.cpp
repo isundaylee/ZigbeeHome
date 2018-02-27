@@ -21,8 +21,10 @@ extern "C" void main(void) {
   LEDPin::setMode(GPIO_MODE_OUTPUT);
   LEDPin::clear();
 
-  MyZigbee bee(ZIGBEE_ROLE_ROUTER);
+  MyZigbee bee(ZIGBEE_ROLE_ROUTER, 0xBEEF);
   bee.init();
+
+  bee.connect(true, 10000);
 
   while (true) {
     if (!bee.isConnected()) {
@@ -41,6 +43,6 @@ extern "C" void main(void) {
 
     uint8_t data[] = {0x11, 0x22, 0x33};
     bee.send(0x0000, sizeof(data), data);
-    Tick::delay(300);
+    // Tick::delay(300);
   }
 }

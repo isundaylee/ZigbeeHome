@@ -7,6 +7,7 @@ template <typename USART, typename ResetPin> class SimpleZigbee {
 private:
   Zigbee<USART, ResetPin> bee;
   uint8_t role_;
+  uint16_t panId_;
   int sendFailures_ = 0;
 
   bool report(const char *action, uint8_t result) {
@@ -36,6 +37,9 @@ private:
       if (!report("Setting role", bee.setRole(role_)))
         return false;
 
+      if (!report("Setting PAN ID", bee.setPANId(panId_)))
+        return false;
+
       if (!report("Setting primary channel",
                   bee.setChannelMask(true, 0x00002000)))
         return false;
@@ -50,12 +54,18 @@ private:
                                                      2, clusters, 2, clusters)))
       return false;
 
-    if (!report("Starting network", bee.startup()))
-      return false;
+    switch (role_) {
+    case ZIGBEE_ROLE_ROUTER:
+      if (!report("Network steering",
+                  bee.startCommissioning(
+                      ZIGBEE_COMMISSIONING_MODE_NETWORK_STEERING)))
+        return false;
+      break;
+    }
   }
 
 public:
-  SimpleZigbee(uint8_t role) : role_(role) {}
+  SimpleZigbee(uint8_t role, uint16_t panId) : role_(role), panId_(panId) {}
 
   void init() { bee.init(); }
 

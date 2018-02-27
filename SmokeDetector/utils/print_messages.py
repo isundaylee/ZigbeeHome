@@ -78,6 +78,8 @@ def send_command(s, cmd):
 
     time.sleep(0.1)
 
+PAN_ID = 0xBEEF
+
 with serial.Serial(DEV, 115200) as s:
     time.sleep(1)
 
@@ -85,7 +87,7 @@ with serial.Serial(DEV, 115200) as s:
     listener.start()
 
     if len(sys.argv) > 2:
-        should_reset = (len(sys.argv) < 3 and sys.argv[3] == 'reset')
+        should_reset = (len(sys.argv) > 3 and sys.argv[3] == 'reset')
 
         if sys.argv[2] == 'coord':
             if should_reset:
@@ -97,10 +99,11 @@ with serial.Serial(DEV, 115200) as s:
             time.sleep(5)
 
             if should_reset:
-                log('Setting role and channel masks...')
+                log('Setting role, channel masks, and PAN ID...')
                 send_command(s, b'\x21\x09\x87\x00\x00\x01\x00')
                 send_command(s, b'\x2F\x08\x01\x00\x20\x00\x00')
                 send_command(s, b'\x2F\x08\x00\x00\x00\x00\x00')
+                send_command(s, b'\x21\x09\x83\x00\x00\x02\xEF\xBE')
 
             log('Registering...')
             send_command(s, b'\x24\x00\x01\x04\x01\x00\x01\x00\x00\x02\x00\x00\x06\x00\x02\x00\x00\x06\x00')

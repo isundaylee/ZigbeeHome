@@ -146,7 +146,7 @@ public:
         DebugPrint(" ");
         DebugPrintHex(command_[i], false);
       }
-      DebugPrint(".\n");
+      DebugPrint("\n");
     }
 
     for (int i = 0;
@@ -267,6 +267,12 @@ public:
 
   uint8_t setRole(uint8_t role) {
     uint8_t data[] = {0x87, 0x00, 0x00, 0x01, role};
+    return sendSyncCommand(ZIGBEE_CMD_SYS_OSAL_NV_WRITE, sizeof(data), data);
+  }
+
+  uint8_t setPANId(uint16_t panId) {
+    uint8_t data[] = {0x83, 0x00,           0x00,
+                      0x02, panId & 0x00FF, (panId & 0xFF00) >> 8};
     return sendSyncCommand(ZIGBEE_CMD_SYS_OSAL_NV_WRITE, sizeof(data), data);
   }
 
