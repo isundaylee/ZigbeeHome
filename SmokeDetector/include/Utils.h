@@ -11,7 +11,7 @@ typedef LPUART_1 DebugUART;
 
 template <typename T> void DebugPrint(T data) { DebugUART::write(data); }
 
-void DebugPrintHexRaw(int number) {
+static void DebugPrintHexRaw(int number) {
   if (number >= 0x10) {
     DebugPrintHexRaw(number >> 4);
   }
@@ -23,7 +23,7 @@ void DebugPrintHexRaw(int number) {
   }
 }
 
-void DebugPrintHex(int number, bool prefix = true) {
+static void DebugPrintHex(int number, bool prefix = true) {
   if (prefix) {
     DebugUART::write(static_cast<uint8_t>('0'));
     DebugUART::write(static_cast<uint8_t>('x'));

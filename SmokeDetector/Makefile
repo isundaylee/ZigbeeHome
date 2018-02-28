@@ -84,7 +84,7 @@ $(BUILDDIR)/$(NAME).bin: $(BUILDDIR)/$(NAME).elf size
 ################################################################################
 
 flash: $(BUILDDIR)/$(NAME).bin
-	st-flash write $(BUILDDIR)/$(NAME).bin 0x08000000
+	st-flash --reset write $(BUILDDIR)/$(NAME).bin 0x08000000
 
 gdb: $(BUILDDIR)/$(NAME).elf
 	$(GDB) $(BUILDDIR)/$(NAME).elf

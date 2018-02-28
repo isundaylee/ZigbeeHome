@@ -64,7 +64,9 @@ const uint32_t ZIGBEE_TIMEOUT_SYNC = 5000;
 const uint32_t ZIGBEE_TIMEOUT_RESET = 5000;
 const uint32_t ZIGBEE_TIMEOUT_DATA_CONFIRM = 1000;
 
-template <typename USART, typename ResetPin> class Zigbee {
+const uint32_t ZIGBEE_WAKEUP_DELAY = 10;
+
+template <typename USART, typename ResetPin, typename WakeUpPin> class Zigbee {
 private:
   RingBuffer<uint8_t, 128> command_;
 
@@ -87,6 +89,9 @@ public:
 
     ResetPin::GPIO::init();
     ResetPin::setMode(GPIO_MODE_OUTPUT);
+
+    WakeUpPin::GPIO::init();
+    WakeUpPin::setMode(GPIO_MODE_OUTPUT);
   }
 
   uint8_t calculateFCS() {
@@ -390,4 +395,11 @@ public:
     }
     return ZIGBEE_STATUS_TIMEOUT;
   }
+
+  void wakeUp() {
+    WakeUpPin::clear();
+    Tick::delay(ZIGBEE_WAKEUP_DELAY);
+  }
+
+  void sleep() { WakeUpPin::set(); }
 };

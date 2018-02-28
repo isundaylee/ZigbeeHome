@@ -3,12 +3,14 @@
 #include "Utils.h"
 #include "Zigbee.h"
 
-template <typename USART, typename ResetPin> class SimpleZigbee {
+const int TIMEOUT_FAILURES_THRESHOLD = 5;
+
+template <typename USART, typename ResetPin, typename WakeUpPin>
+class SimpleZigbee {
 private:
-  Zigbee<USART, ResetPin> bee;
   uint8_t role_;
   uint16_t panId_;
-  int sendFailures_ = 0;
+  int timeoutFailures_ = 0;
 
   bool report(const char *action, uint8_t result) {
     DebugPrint("[Bee]    ");
@@ -17,6 +19,12 @@ private:
       DebugPrint(" succeeded! \n");
       return true;
     } else {
+      if (result == ZIGBEE_STATUS_TIMEOUT) {
+        timeoutFailures_++;
+      } else {
+        timeoutFailures_ = 0;
+      }
+
       DebugPrint(" failed with error ");
       DebugPrintHex(result);
       DebugPrint("... \n");
@@ -25,6 +33,8 @@ private:
   }
 
   bool setup(bool reconfigure) {
+    timeoutFailures_ = 0;
+
     // First we always power cycle the Zigbee chip.
     if (!report("Reset", bee.reset()))
       return false;
@@ -54,23 +64,33 @@ private:
                                                      2, clusters, 2, clusters)))
       return false;
 
-    switch (role_) {
-    case ZIGBEE_ROLE_ROUTER:
-      if (!report("Network steering",
+    if (role_ == ZIGBEE_ROLE_COORDINATOR) {
+      if (!report("Network formation",
                   bee.startCommissioning(
-                      ZIGBEE_COMMISSIONING_MODE_NETWORK_STEERING)))
+                      ZIGBEE_COMMISSIONING_MODE_NETWORK_FORMATION)))
         return false;
-      break;
     }
+
+    if (!report(
+            "Network steering",
+            bee.startCommissioning(ZIGBEE_COMMISSIONING_MODE_NETWORK_STEERING)))
+      return false;
   }
 
 public:
+  Zigbee<USART, ResetPin, WakeUpPin> bee;
+
   SimpleZigbee(uint8_t role, uint16_t panId) : role_(role), panId_(panId) {}
 
   void init() { bee.init(); }
 
   bool isConnected() {
     auto state = bee.zdoState;
+
+    if (timeoutFailures_ >= TIMEOUT_FAILURES_THRESHOLD) {
+      return false;
+    }
+
     return (state == ZIGBEE_ZDO_STATE_ZB_COORD ||
             state == ZIGBEE_ZDO_STATE_ROUTER ||
             state == ZIGBEE_ZDO_STATE_END_DEVICE);
@@ -81,24 +101,32 @@ public:
   bool connect(bool reconfigure, uint32_t timeout) {
     uint32_t start = Tick::value;
 
+    bee.wakeUp();
     setup(reconfigure);
 
     while (!Tick::hasElapsedSince(start, timeout)) {
       bee.process();
 
       if (isConnected()) {
+        bee.sleep();
         return true;
       }
     }
 
+    bee.sleep();
     return false;
   }
 
   bool send(uint16_t dst, uint8_t dataLen, uint8_t *data) {
     static uint8_t transId = 0;
+
+    bee.wakeUp();
     uint8_t result = bee.dataRequest(dst, 0x01, 0x01, 0x0006, transId++, 0x10,
                                      0x0F, dataLen, data);
+    bee.sleep();
+
     bool success = report("Sending data", result);
+
     return success;
   }
 };

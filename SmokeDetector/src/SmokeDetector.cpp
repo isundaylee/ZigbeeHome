@@ -9,7 +9,7 @@
 #include "Utils.h"
 
 typedef GPIO_A::Pin<4> LEDPin;
-typedef SimpleZigbee<USART_2, GPIO_A::Pin<7>> MyZigbee;
+typedef SimpleZigbee<USART_2, GPIO_A::Pin<7>, GPIO_C::Pin<15>> MyZigbee;
 
 extern "C" void main(void) {
   Tick::init();
@@ -21,10 +21,13 @@ extern "C" void main(void) {
   LEDPin::setMode(GPIO_MODE_OUTPUT);
   LEDPin::clear();
 
-  MyZigbee bee(ZIGBEE_ROLE_ROUTER, 0xBEEF);
+  MyZigbee bee(ZIGBEE_ROLE_END_DEVICE, 0xBEEF);
   bee.init();
 
   bee.connect(true, 10000);
+  if (bee.isConnected()) {
+    LEDPin::set();
+  }
 
   while (true) {
     if (!bee.isConnected()) {
@@ -43,6 +46,7 @@ extern "C" void main(void) {
 
     uint8_t data[] = {0x11, 0x22, 0x33};
     bee.send(0x0000, sizeof(data), data);
-    // Tick::delay(300);
+    // bee.bee.permitJoiningRequest(0xFFFC, 0xFE);
+    Tick::delay(1000);
   }
 }
