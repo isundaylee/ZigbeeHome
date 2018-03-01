@@ -20,12 +20,12 @@ public:
     Interrupt::enableIRQ(SysTick_IRQn);
   }
 
-  static void delay(int ms) {
-    uint32_t target = value + ms;
-
-    while (value < target)
+  static void waitUntil(uint32_t deadline) {
+    while (value < deadline)
       asm("nop");
   }
+
+  static void delay(int ms) { waitUntil(value + ms); }
 
   static bool hasElapsedSince(uint32_t since, uint32_t duration) {
     return (value >= since + duration);

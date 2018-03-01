@@ -64,17 +64,24 @@ private:
                                                      2, clusters, 2, clusters)))
       return false;
 
-    if (role_ == ZIGBEE_ROLE_COORDINATOR) {
-      if (!report("Network formation",
-                  bee.startCommissioning(
-                      ZIGBEE_COMMISSIONING_MODE_NETWORK_FORMATION)))
-        return false;
-    }
+    // if (reconfigure) {
+      if (role_ == ZIGBEE_ROLE_COORDINATOR) {
+        if (!report("Network formation",
+                    bee.startCommissioning(
+                        ZIGBEE_COMMISSIONING_MODE_NETWORK_FORMATION)))
+          return false;
+      }
 
-    if (!report(
-            "Network steering",
-            bee.startCommissioning(ZIGBEE_COMMISSIONING_MODE_NETWORK_STEERING)))
-      return false;
+      if (!report("Network steering",
+                  bee.startCommissioning(
+                      ZIGBEE_COMMISSIONING_MODE_NETWORK_STEERING)))
+        return false;
+    // } else {
+      // if (!report(
+              // "Initialization",
+              // bee.startCommissioning(ZIGBEE_COMMISSIONING_MODE_INITIALIZATION)))
+        // return false;
+    // }
   }
 
 public:

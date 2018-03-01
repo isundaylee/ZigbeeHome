@@ -9,7 +9,7 @@
 #include "Utils.h"
 
 typedef GPIO_A::Pin<4> LEDPin;
-typedef SimpleZigbee<USART_2, GPIO_A::Pin<7>, GPIO_C::Pin<15>> MyZigbee;
+typedef SimpleZigbee<USART_2, GPIO_C::Pin<14>, GPIO_C::Pin<15>> MyZigbee;
 
 extern "C" void main(void) {
   Tick::init();
@@ -24,17 +24,24 @@ extern "C" void main(void) {
   MyZigbee bee(ZIGBEE_ROLE_END_DEVICE, 0xBEEF);
   bee.init();
 
-  bee.connect(true, 10000);
-  if (bee.isConnected()) {
-    LEDPin::set();
+  // Should we initialize?
+  if (false) {
+    bee.connect(true, 1000000);
+    if (bee.isConnected()) {
+      LEDPin::set();
+    }
   }
+
+  ADC_1::init();
+  ADC_1::enableVoltageReference();
+  ADC_1::selectChannel(ADC_CHANNEL_VOLTAGE_REFERENCE);
 
   while (true) {
     if (!bee.isConnected()) {
       LEDPin::clear();
 
       // Connect if we're not connected (or disconnected)
-      if (bee.connect(false, 10000)) {
+      if (bee.connect(false, 1000000)) {
         DebugPrint("[Main]   Connect successful!\n");
         LEDPin::set();
       } else {
@@ -44,9 +51,12 @@ extern "C" void main(void) {
       }
     }
 
-    uint8_t data[] = {0x11, 0x22, 0x33};
+    uint32_t voltage = 3 * 4096 * ADC_1::getVoltageReferenceCalibrationValue() /
+                       ADC_1::convert();
+    uint8_t data[] = {static_cast<uint8_t>((voltage & 0xFF00) >> 8),
+                      static_cast<uint8_t>(voltage & 0x00FF)};
     bee.send(0x0000, sizeof(data), data);
     // bee.bee.permitJoiningRequest(0xFFFC, 0xFE);
-    Tick::delay(1000);
+    Tick::delay(5000);
   }
 }

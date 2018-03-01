@@ -6,7 +6,8 @@ import datetime
 import sys
 
 def log(msg):
-    print('[%s] %s' % (datetime.datetime.now(), msg))
+    sys.stdout.write('[%s] %s\n' % (datetime.datetime.now(), msg))
+    sys.stdout.flush()
 
 def bytes_to_string(bs):
     return ' '.join(map(lambda b: '%02x' % b, bs))
@@ -59,12 +60,18 @@ class ListeningThread(threading.Thread):
             log('Received command (%s %s): payload = %s' %
                 (cmd_type, bytes_to_string(cmd), bytes_to_string(data)))
 
+            if cmd[0] == 0x44 and cmd[1] == 0x81:
+                msg_len = data[16]
+                int_volt = 256 * data[17] + data[18]
+
+                log('Received voltage reading: %.4f V' % (1.0 * int_volt / 4096.0))
+
 if sys.argv[1] == 'slave':
     DEV = '/dev/cu.wchusbserial401120'
 elif sys.argv[1] == 'master':
     DEV = '/dev/cu.usbserial-A9M9DV3R'
 else:
-    raise RuntimeError("Invalid device given.")
+    DEV = sys.argv[1]
 
 def send_command(s, cmd):
     log('Sending %s' % bytes_to_string(cmd))
