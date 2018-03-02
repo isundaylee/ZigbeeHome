@@ -17,19 +17,12 @@ extern "C" void main(void) {
   DebugUART::init();
   DebugPrint("[Main]   Hello, world!\n");
 
-  LEDPin::GPIO::init();
-  LEDPin::setMode(GPIO_MODE_OUTPUT);
-  LEDPin::clear();
-
   MyZigbee bee(ZIGBEE_ROLE_END_DEVICE, 0xBEEF);
   bee.init();
 
   // Should we initialize?
   if (false) {
-    bee.connect(true, 1000000);
-    if (bee.isConnected()) {
-      LEDPin::set();
-    }
+    bee.connect(true, 10000);
   }
 
   ADC_1::init();
@@ -38,15 +31,14 @@ extern "C" void main(void) {
 
   while (true) {
     if (!bee.isConnected()) {
-      LEDPin::clear();
-
       // Connect if we're not connected (or disconnected)
-      if (bee.connect(false, 1000000)) {
+      DebugPrint("[Main]   Connecting...\n");
+      if (bee.connect(false, 10000)) {
         DebugPrint("[Main]   Connect successful!\n");
-        LEDPin::set();
       } else {
         DebugPrint("[Main]   Connect failed!\n");
-        Tick::delay(1000);
+        bee.bee.turnOff();
+        Tick::delay(5000);
         continue;
       }
     }

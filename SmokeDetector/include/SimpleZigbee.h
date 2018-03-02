@@ -4,12 +4,14 @@
 #include "Zigbee.h"
 
 const int TIMEOUT_FAILURES_THRESHOLD = 5;
+const int SEND_FAILURES_THRESHOLD = 3;
 
 template <typename USART, typename ResetPin, typename WakeUpPin>
 class SimpleZigbee {
 private:
   uint8_t role_;
   uint16_t panId_;
+  int sendFailures_ = 0;
   int timeoutFailures_ = 0;
 
   bool report(const char *action, uint8_t result) {
@@ -33,6 +35,7 @@ private:
   }
 
   bool setup(bool reconfigure) {
+    sendFailures_ = 0;
     timeoutFailures_ = 0;
 
     // First we always power cycle the Zigbee chip.
@@ -64,24 +67,17 @@ private:
                                                      2, clusters, 2, clusters)))
       return false;
 
-    // if (reconfigure) {
-      if (role_ == ZIGBEE_ROLE_COORDINATOR) {
-        if (!report("Network formation",
-                    bee.startCommissioning(
-                        ZIGBEE_COMMISSIONING_MODE_NETWORK_FORMATION)))
-          return false;
-      }
-
-      if (!report("Network steering",
+    if (role_ == ZIGBEE_ROLE_COORDINATOR) {
+      if (!report("Network formation",
                   bee.startCommissioning(
-                      ZIGBEE_COMMISSIONING_MODE_NETWORK_STEERING)))
+                      ZIGBEE_COMMISSIONING_MODE_NETWORK_FORMATION)))
         return false;
-    // } else {
-      // if (!report(
-              // "Initialization",
-              // bee.startCommissioning(ZIGBEE_COMMISSIONING_MODE_INITIALIZATION)))
-        // return false;
-    // }
+    }
+
+    if (!report(
+            "Network steering",
+            bee.startCommissioning(ZIGBEE_COMMISSIONING_MODE_NETWORK_STEERING)))
+      return false;
   }
 
 public:
@@ -95,6 +91,10 @@ public:
     auto state = bee.zdoState;
 
     if (timeoutFailures_ >= TIMEOUT_FAILURES_THRESHOLD) {
+      return false;
+    }
+
+    if (sendFailures_ >= SEND_FAILURES_THRESHOLD) {
       return false;
     }
 
@@ -133,6 +133,12 @@ public:
     bee.sleep();
 
     bool success = report("Sending data", result);
+
+    if (success) {
+      sendFailures_ = 0;
+    } else {
+      sendFailures_++;
+    }
 
     return success;
   }

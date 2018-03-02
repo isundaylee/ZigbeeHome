@@ -49,6 +49,7 @@ const uint8_t ZIGBEE_ZDO_STATE_NWK_ORPHAN = 0x0A;
 
 const uint8_t ZIGBEE_STATUS_SUCCESS = 0x00;
 const uint8_t ZIGBEE_STATUS_NO_ROUTE = 0xCD;
+const uint8_t ZIGBEE_STATUS_TURNED_OFF = 0xFE;
 const uint8_t ZIGBEE_STATUS_TIMEOUT = 0xFF;
 
 const uint16_t ZIGBEE_SYNC_COMMANDS[] = {
@@ -61,15 +62,17 @@ const uint16_t ZIGBEE_SYNC_COMMANDS[] = {
     ZIGBEE_CMD_ZDO_STARTUP_FROM_APP};
 
 const uint32_t ZIGBEE_TIMEOUT_SYNC = 5000;
-const uint32_t ZIGBEE_TIMEOUT_RESET = 5000000;
-const uint32_t ZIGBEE_TIMEOUT_DATA_CONFIRM = 1000;
+const uint32_t ZIGBEE_TIMEOUT_RESET = 5000;
+const uint32_t ZIGBEE_TIMEOUT_DATA_CONFIRM = 3000;
 
 const uint32_t ZIGBEE_WAKEUP_DELAY = 10;
+const uint32_t ZIGBEE_MESSAGE_GAP_DELAY = 10;
 
 template <typename USART, typename ResetPin, typename WakeUpPin> class Zigbee {
 private:
   RingBuffer<uint8_t, 128> command_;
 
+  bool isPowered = false;
   uint16_t pendingSyncCommand_;
   uint8_t lastSyncCommandStatus_;
   int pendingDataConfirmTransId_ = -1;
@@ -79,10 +82,27 @@ private:
   int commandTotalLength() { return 1 + 1 + 2 + commandDataLength() + 1; }
 
 public:
-  bool isPowered = false;
+  bool hasStarted = false;
   uint8_t zdoState = 0;
 
   Zigbee() {}
+
+  void turnOff() {
+    ResetPin::clear();
+    isPowered = false;
+  }
+
+  void turnOn() {
+    ResetPin::set();
+    isPowered = true;
+  }
+
+  void wakeUp() {
+    WakeUpPin::clear();
+    Tick::delay(ZIGBEE_WAKEUP_DELAY);
+  }
+
+  void sleep() { WakeUpPin::set(); }
 
   void init() {
     USART::init();
@@ -92,6 +112,8 @@ public:
 
     WakeUpPin::GPIO::init();
     WakeUpPin::setMode(GPIO_MODE_OUTPUT);
+
+    turnOff();
   }
 
   uint8_t calculateFCS() {
@@ -170,7 +192,7 @@ public:
 
     switch (cmd) {
     case ZIGBEE_CMD_SYS_RESET_IND:
-      isPowered = true;
+      hasStarted = true;
       break;
     case ZIGBEE_CMD_ZDO_STATE_CHANGE_IND:
       zdoState = command_[4];
@@ -224,7 +246,11 @@ public:
 
   uint8_t sendSyncCommand(uint16_t command, uint8_t dataSize, uint8_t *data,
                           bool wait = true) {
-    Tick::delay(10);
+    if (!isPowered) {
+      return ZIGBEE_STATUS_TURNED_OFF;
+    }
+
+    Tick::delay(ZIGBEE_MESSAGE_GAP_DELAY);
 
     if (wait) {
       pendingSyncCommand_ = command;
@@ -263,7 +289,6 @@ public:
     uint8_t status;
     if ((status = sendSyncCommand(ZIGBEE_CMD_SYS_OSAL_NV_WRITE, sizeof(data),
                                   data)) != ZIGBEE_STATUS_SUCCESS) {
-      DebugPrintHex(status);
       return status;
     }
 
@@ -379,27 +404,20 @@ public:
   }
 
   uint8_t reset() {
-    ResetPin::clear();
+    turnOff();
     Tick::delay(100);
-    ResetPin::set();
+    turnOn();
 
-    isPowered = false;
+    hasStarted = false;
     zdoState = ZIGBEE_ZDO_STATE_HOLD;
 
     uint32_t start = Tick::value;
     while (!Tick::hasElapsedSince(start, ZIGBEE_TIMEOUT_RESET)) {
       process();
-      if (isPowered) {
+      if (hasStarted) {
         return ZIGBEE_STATUS_SUCCESS;
       }
     }
     return ZIGBEE_STATUS_TIMEOUT;
   }
-
-  void wakeUp() {
-    WakeUpPin::clear();
-    Tick::delay(ZIGBEE_WAKEUP_DELAY);
-  }
-
-  void sleep() { WakeUpPin::set(); }
 };

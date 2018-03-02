@@ -67,7 +67,7 @@ class ListeningThread(threading.Thread):
                 log('Received voltage reading: %.4f V' % (1.0 * int_volt / 4096.0))
 
 if sys.argv[1] == 'slave':
-    DEV = '/dev/cu.wchusbserial401120'
+    DEV = '/dev/cu.wchusbserial1420'
 elif sys.argv[1] == 'master':
     DEV = '/dev/cu.usbserial-A9M9DV3R'
 else:

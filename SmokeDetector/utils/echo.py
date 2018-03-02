@@ -6,7 +6,7 @@ import datetime
 import sys
 
 if sys.argv[1] == 'slave':
-    DEV = '/dev/cu.wchusbserial401130'
+    DEV = '/dev/cu.wchusbserial14230'
 elif sys.argv[1] == 'master':
     DEV = '/dev/cu.usbserial-A9M9DV3R'
 else:
