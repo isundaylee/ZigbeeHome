@@ -91,10 +91,13 @@ public:
     auto state = bee.zdoState;
 
     if (timeoutFailures_ >= TIMEOUT_FAILURES_THRESHOLD) {
+      DebugPrint(
+          "[Bee]    Considered not connected due to timeout failures.\n");
       return false;
     }
 
     if (sendFailures_ >= SEND_FAILURES_THRESHOLD) {
+      DebugPrint("[Bee]    Considered not connected due to send failures.\n");
       return false;
     }
 

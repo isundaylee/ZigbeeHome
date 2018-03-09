@@ -10,6 +10,7 @@
 
 typedef GPIO_A::Pin<4> LEDPin;
 typedef SimpleZigbee<USART_2, GPIO_C::Pin<14>, GPIO_C::Pin<15>> MyZigbee;
+typedef GPIO_A::Pin<7> InitPin;
 
 extern "C" void main(void) {
   Tick::init();
@@ -17,11 +18,15 @@ extern "C" void main(void) {
   DebugUART::init();
   DebugPrint("[Main]   Hello, world!\n");
 
+  InitPin::GPIO::init();
+  InitPin::setMode(GPIO_MODE_INPUT);
+  InitPin::setPullMode(GPIO_PULL_UP);
+
   MyZigbee bee(ZIGBEE_ROLE_END_DEVICE, 0xBEEF);
   bee.init();
 
   // Should we initialize?
-  if (false) {
+  if (!InitPin::get()) {
     bee.connect(true, 10000);
   }
 
