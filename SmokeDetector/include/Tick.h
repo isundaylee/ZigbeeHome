@@ -10,8 +10,15 @@ public:
   static volatile uint32_t value;
 
   static void init() {
-    // TODO: Fix this when we get integer division working.
-    SysTick->LOAD = 2097;
+    static bool inited = false;
+
+    if (inited) {
+      return;
+    } else {
+      inited = true;
+    }
+
+    SysTick->LOAD = Clock::currentClockFrequency / 1000;
     SysTick->VAL = 0;
     SysTick->CTRL = SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_TICKINT_Msk |
                     SysTick_CTRL_CLKSOURCE_Msk;

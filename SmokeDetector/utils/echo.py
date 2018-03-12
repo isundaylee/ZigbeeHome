@@ -10,7 +10,7 @@ if sys.argv[1] == 'slave':
 elif sys.argv[1] == 'master':
     DEV = '/dev/cu.usbserial-A9M9DV3R'
 else:
-    raise RuntimeError("Invalid device given.")
+    DEV = '/dev/' + sys.argv[1]
 
 with serial.Serial(DEV, 115200) as s:
     time.sleep(0.500)

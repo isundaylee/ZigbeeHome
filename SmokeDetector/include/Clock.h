@@ -2,6 +2,11 @@
 
 #include <stm32l0xx.h>
 
+#define WAIT_UNTIL(condition)                                                  \
+  do {                                                                         \
+    asm("nop");                                                                \
+  } while (!(condition))
+
 class Clock {
 public:
   static uint32_t currentClockFrequency;
@@ -37,6 +42,26 @@ public:
     case RCC_ICSCR_MSIRANGE_6:
       currentClockFrequency = 4194000;
       break;
+    }
+  }
+
+  static void enableLSI() {
+    RCC->CSR |= RCC_CSR_LSION;
+    WAIT_UNTIL((RCC->CSR & RCC_CSR_LSIRDY) != 0);
+  }
+
+  static void enableHSI() {
+    RCC->CR |= RCC_CR_HSION;
+    WAIT_UNTIL((RCC->CR & RCC_CR_HSIRDY) != 0);
+  }
+
+  static void selectSystemClock(uint32_t systemClock) {
+    RCC->CFGR &= ~RCC_CFGR_SW_Msk;
+    RCC->CFGR |= systemClock;
+
+    switch (systemClock) {
+    case RCC_CFGR_SW_HSI:
+      currentClockFrequency = 16000000;
     }
   }
 };

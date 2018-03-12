@@ -28,7 +28,8 @@ public:
       GPIO_A::init();
       GPIO_A::Pin<1>::setMode(GPIO_MODE_ALTERNATE, 6);
 
-      usart()->BRR = 4660;
+      // TODO: Calculate this instead
+      usart()->BRR = 35555;
     } else if constexpr (usartAddr == USART2_BASE) {
       RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
@@ -36,10 +37,8 @@ public:
       GPIO_A::Pin<9>::setMode(GPIO_MODE_ALTERNATE, 4);
       GPIO_A::Pin<10>::setMode(GPIO_MODE_ALTERNATE, 4);
 
-      usart()->BRR = 2097000 / 115200;
+      usart()->BRR = Clock::currentClockFrequency / 115200;
     }
-
-    // usart()->BRR = 2100000 / 115200;
 
     usart()->CR1 &= ~(USART_CR1_M);
     usart()->CR1 |= USART_CR1_RXNEIE;
@@ -81,6 +80,10 @@ public:
     }
 
     return -1;
+  }
+
+  static void waitUntilTxDone() {
+    WAIT_UNTIL((usart()->ISR & USART_ISR_TC) != 0);
   }
 
   friend void vector_usart2();

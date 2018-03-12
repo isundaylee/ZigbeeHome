@@ -23,6 +23,7 @@ public:
     WAIT_UNTIL((ADC1->ISR & ADC_ISR_EOCAL) != 0);
     ADC1->ISR |= ADC_ISR_EOCAL;
 
+    ADC1->ISR |= ADC_ISR_ADRDY;
     ADC1->CR |= ADC_CR_ADEN;
     WAIT_UNTIL((ADC1->ISR & ADC_ISR_ADRDY) != 0);
   }

@@ -33,7 +33,7 @@
 /* 0x40-C */
 .word   spin
 .word   spin
-.word   spin
+.word   vector_rtc
 .word   spin
 
 /* 0x50-C */
