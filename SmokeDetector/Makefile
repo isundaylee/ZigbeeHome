@@ -46,7 +46,7 @@ NAME		= SmokeDetector
 
 HEADERS		= $(wildcard include/*.h)
 CPPOBJS 	= $(patsubst $(SRCDIR)/%.cpp, $(BUILDDIR)/%.o, $(wildcard $(SRCDIR)/*.cpp))
-OBJS 		= $(CPPOBJS) $(BUILDDIR)/Boot.o
+OBJS 		= $(CPPOBJS) $(BUILDDIR)/Boot.o $(BUILDDIR)/$(NAME).o
 
 AEABI_LIB	= lib/libaeabi-cortexm0/libaeabi-cortexm0.a
 
@@ -60,7 +60,9 @@ $(AEABI_LIB):
 	cd lib/libaeabi-cortexm0 && make
 
 $(CPPOBJS): $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp $(HEADERS)
-	# echo $(CPPOBJS)
+	$(CC) -c $(CC_FLAGS) $< -o $@
+
+$(BUILDDIR)/$(NAME).o: apps/$(NAME).cpp $(HEADERS)
 	$(CC) -c $(CC_FLAGS) $< -o $@
 
 $(BUILDDIR)/Boot.o: $(SRCDIR)/Boot.s
@@ -70,8 +72,8 @@ $(BUILDDIR)/Boot.o: $(SRCDIR)/Boot.s
 # Linking stage
 ################################################################################
 
-$(BUILDDIR)/$(NAME).elf: $(OBJS) $(SRCDIR)/$(NAME).lds $(AEABI_LIB)
-	$(LD) -T $(SRCDIR)/$(NAME).lds $(OBJS) $(LD_FLAGS) -o $@
+$(BUILDDIR)/$(NAME).elf: $(OBJS) $(SRCDIR)/LinkScript.lds $(AEABI_LIB)
+	$(LD) -T $(SRCDIR)/LinkScript.lds $(OBJS) $(LD_FLAGS) -o $@
 
 $(BUILDDIR)/$(NAME).dump: $(BUILDDIR)/$(NAME).elf
 	$(DUMP) $< >$@

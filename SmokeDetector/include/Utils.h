@@ -36,3 +36,20 @@ static void DebugPrintHex(int number, bool prefix = true) {
 
   DebugPrintHexRaw(number);
 }
+
+static void DebugPrintDecRaw(int number) {
+  if (number >= 10) {
+    DebugPrintDecRaw(number / 10);
+  }
+
+  DebugUART::write(static_cast<uint8_t>('0' + (number % 10)));
+}
+
+static void DebugPrintDec(int number) {
+  if (number == 0) {
+    DebugUART::write(static_cast<uint8_t>('0'));
+    return;
+  }
+
+  DebugPrintDecRaw(number);
+}

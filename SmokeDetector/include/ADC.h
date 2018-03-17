@@ -31,9 +31,27 @@ public:
   static void enableVoltageReference() { ADC->CCR |= ADC_CCR_VREFEN; }
   static void enableTemperatureSensor() { ADC->CCR |= ADC_CCR_TSEN; }
 
-  static void selectChannel(uint8_t ch) { ADC1->CHSELR = (1 << ch); }
+  static void selectChannel(uint8_t ch) {
+    if ((ADC1->CR & ADC_CR_ADSTART) != 0) {
+      ADC1->CR |= ADC_CR_ADSTP;
+      WAIT_UNTIL((ADC1->CR & ADC_CR_ADSTART) == 0);
+    }
+
+    ADC1->CHSELR = (1 << ch);
+
+    ADC1->CR |= ADC_CR_ADSTART;
+    for (int i = 0; i < 1000; i++)
+      asm volatile("nop");
+  }
 
   static uint16_t convert() {
+    if ((ADC1->CR & ADC_CR_ADSTART) != 0) {
+      ADC1->CR |= ADC_CR_ADSTP;
+      WAIT_UNTIL((ADC1->CR & ADC_CR_ADSTART) == 0);
+    }
+
+    ADC1->CFGR1 &= ~ADC_CFGR1_CONT;
+    ADC1->ISR &= ~ADC_ISR_EOSEQ;
     ADC1->CR |= ADC_CR_ADSTART;
     WAIT_UNTIL((ADC1->ISR & ADC_ISR_EOSEQ) != 0);
     return ADC1->DR;
