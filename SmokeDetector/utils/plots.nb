@@ -10,16 +10,19 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[   1165128,      19169]
-NotebookOptionsPosition[   1164616,      19148]
-NotebookOutlinePosition[   1164974,      19164]
-CellTagsIndexPosition[   1164931,      19161]
+NotebookDataLength[   1165244,      19173]
+NotebookOptionsPosition[   1164698,      19151]
+NotebookOutlinePosition[   1165056,      19167]
+CellTagsIndexPosition[   1165013,      19164]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
 Notebook[{
+Cell[BoxData["\[RawEscape]"], "Input",
+ CellChangeTimes->{3.73024658619809*^9}],
 
 Cell[CellGroupData[{
+
 Cell[BoxData[
  RowBox[{"ListLinePlot", "[", "\[IndentingNewLine]", 
   RowBox[{
@@ -19163,14 +19166,15 @@ CellTagsIndex->{}
 *)
 (*NotebookFileOutline
 Notebook[{
+Cell[558, 20, 79, 1, 32, "Input"],
 Cell[CellGroupData[{
-Cell[580, 22, 2134, 40, 180, "Input"],
-Cell[2717, 64, 1160283, 19031, 1029, 1098861, 18024, "CachedBoxData", \
+Cell[662, 25, 2134, 40, 180, "Input"],
+Cell[2799, 67, 1160283, 19031, 995, 1098861, 18024, "CachedBoxData", \
 "BoxData", "Output"]
 }, Open  ]],
-Cell[1163015, 19098, 97, 1, 32, "Input"],
-Cell[1163115, 19101, 1402, 42, 96, "Input"],
-Cell[1164520, 19145, 92, 1, 32, "Input"]
+Cell[1163097, 19101, 97, 1, 32, "Input"],
+Cell[1163197, 19104, 1402, 42, 96, "Input"],
+Cell[1164602, 19148, 92, 1, 32, "Input"]
 }
 ]
 *)
