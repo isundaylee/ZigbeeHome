@@ -62,6 +62,9 @@ private:
         return false;
     }
 
+    if (!report("Setting TX power", bee.setTxPower(20)))
+      return false;
+
     uint16_t clusters[] = {0x0000, 0x0006};
     if (!report("Registration", bee.registerEndpoint(0x01, 0x0104, 0x0100, 0x00,
                                                      2, clusters, 2, clusters)))
@@ -131,7 +134,7 @@ public:
     static uint8_t transId = 0;
 
     bee.wakeUp();
-    uint8_t result = bee.dataRequest(dst, 0x01, 0x01, 0x0006, transId++, 0x10,
+    uint8_t result = bee.dataRequest(dst, 0x01, 0x01, 0x0006, transId++, 0x00,
                                      0x0F, dataLen, data);
     bee.sleep();
 

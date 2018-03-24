@@ -15,6 +15,7 @@ const uint16_t ZIGBEE_CMD_APP_CNF_BDB_COMMISSIONING_NOTIFICATION = 0x4F80;
 const uint16_t ZIGBEE_CMD_APP_CNF_BDB_SET_CHANNEL = 0x2F08;
 const uint16_t ZIGBEE_CMD_APP_CNF_BDB_START_COMMISSIONING = 0x2F05;
 const uint16_t ZIGBEE_CMD_SYS_OSAL_NV_WRITE = 0x2109;
+const uint16_t ZIGBEE_CMD_SYS_SET_TX_POWER = 0x2114;
 const uint16_t ZIGBEE_CMD_SYS_RESET_IND = 0x4180;
 const uint16_t ZIGBEE_CMD_ZB_PERMIT_JOINING_REQUEST = 0x2608;
 const uint16_t ZIGBEE_CMD_ZDO_MGMT_PERMIT_JOIN_RSP = 0x45B6;
@@ -58,6 +59,7 @@ const uint16_t ZIGBEE_SYNC_COMMANDS[] = {
     ZIGBEE_CMD_APP_CNF_BDB_SET_CHANNEL,
     ZIGBEE_CMD_APP_CNF_BDB_START_COMMISSIONING,
     ZIGBEE_CMD_SYS_OSAL_NV_WRITE,
+    ZIGBEE_CMD_SYS_SET_TX_POWER,
     ZIGBEE_CMD_ZB_PERMIT_JOINING_REQUEST,
     ZIGBEE_CMD_ZDO_STARTUP_FROM_APP};
 
@@ -396,6 +398,19 @@ public:
     uint8_t data[] = {dest & 0x00FF, (dest & 0xFF00) >> 8, timeout};
     return sendSyncCommand(ZIGBEE_CMD_ZB_PERMIT_JOINING_REQUEST, sizeof(data),
                            data);
+  }
+
+  uint8_t setTxPower(uint8_t txPower) {
+    uint8_t data[] = {txPower};
+    uint8_t returnValue =
+        sendSyncCommand(ZIGBEE_CMD_SYS_SET_TX_POWER, sizeof(data), data);
+
+    // TODO: Hack!
+    if (returnValue == ZIGBEE_STATUS_TIMEOUT) {
+      return returnValue;
+    } else {
+      return ZIGBEE_STATUS_SUCCESS;
+    }
   }
 
   uint8_t startup(uint16_t delay = 0) {
